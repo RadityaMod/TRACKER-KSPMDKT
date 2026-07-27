@@ -1,51 +1,53 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tracking Laporan KSP Mendekat</title>
-  <meta name="description" content="Tabel sederhana untuk memantau laporan dan penanganan KSP Mendekat.">
+  <title>Tracker Pelapor OCA — KSP Mendekat</title>
+  <meta name="description" content="Tabel sederhana untuk memantau pelapor OCA dan tindak lanjut KSP Mendekat.">
   <style>
-    :root{--ink:#17263f;--muted:#687489;--paper:#f5f7f9;--line:#dce3e9;--red:#c43b46;--green:#2e7650;--amber:#9a641a}
-    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,"Segoe UI",sans-serif;font-size:13px}header{padding:28px 30px 22px;background:#fff;border-bottom:1px solid var(--line)}h1{margin:0 0 7px;font-size:25px;letter-spacing:-.02em}header p{margin:0;color:var(--muted);line-height:1.5}.wrap{padding:22px 30px 34px}.summary{display:flex;flex-wrap:wrap;gap:0;margin-bottom:18px;border:1px solid var(--line);background:#fff}.summary div{min-width:150px;padding:13px 17px;border-right:1px solid var(--line)}.summary div:last-child{border-right:0}.summary span,.summary strong{display:block}.summary span{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.summary strong{margin-top:5px;font-size:20px}.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.tools input,.tools select,.tools a,.tools button{height:38px;border:1px solid #c6d0da;background:#fff;padding:0 12px;color:var(--ink);font:inherit}.tools input{flex:1;min-width:250px}.tools select{min-width:190px}.tools a,.tools button{display:inline-flex;align-items:center;text-decoration:none;cursor:pointer}.tools a.primary{border-color:var(--red);background:var(--red);color:#fff}.note{margin:0 0 12px;color:var(--muted);font-size:11px}.table-shell{overflow:auto;max-height:calc(100vh - 280px);border:1px solid #c6d0da;background:#fff}table{width:100%;min-width:1900px;border-collapse:separate;border-spacing:0}th{position:sticky;top:0;z-index:2;padding:11px 10px;background:var(--ink);color:#fff;border-right:1px solid rgba(255,255,255,.18);text-align:left;font-size:10px;letter-spacing:.03em;white-space:nowrap}td{padding:10px;border-right:1px solid #edf0f3;border-bottom:1px solid #e5e9ed;vertical-align:top;line-height:1.45}tbody tr:hover{background:#f0f5f8}td:nth-child(1){color:#2d61a8;font-family:Consolas,monospace;font-size:11px;white-space:nowrap}td:nth-child(2),td:nth-child(11),td:nth-child(12){white-space:nowrap}td:nth-child(6),td:nth-child(13){min-width:330px}td:nth-child(9){min-width:150px;font-weight:700}.status{display:inline-block;padding:4px 8px;border:1px solid currentColor;font-size:10px;white-space:nowrap}.aktif{color:var(--amber);background:#fff8e9}.selesai{color:#1e7368;background:#edf8f5}.tutup{color:var(--green);background:#edf7f0}.menunggu{color:#a94e22;background:#fff4ed}.empty{display:none;padding:36px;text-align:center;color:var(--muted)}footer{padding:0 30px 24px;color:var(--muted);font-size:11px}@media(max-width:700px){header,.wrap,footer{padding-left:15px;padding-right:15px}.summary div{min-width:50%;border-bottom:1px solid var(--line)}.tools input,.tools select{width:100%;flex:auto}.table-shell{max-height:calc(100vh - 360px)}}
+    :root{--ink:#17263f;--muted:#687489;--paper:#f5f7f9;--line:#dce3e9;--red:#c43b46;--green:#2e7650;--amber:#9a641a;--blue:#2d61a8}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,"Segoe UI",sans-serif;font-size:13px}header{padding:28px 30px 22px;background:#fff;border-bottom:1px solid var(--line)}h1{margin:0 0 7px;font-size:25px;letter-spacing:-.02em}header p{margin:0;color:var(--muted);line-height:1.5}.wrap{padding:22px 30px 34px}.summary{display:flex;flex-wrap:wrap;gap:0;margin-bottom:18px;border:1px solid var(--line);background:#fff}.summary div{min-width:150px;padding:13px 17px;border-right:1px solid var(--line)}.summary div:last-child{border-right:0}.summary span,.summary strong{display:block}.summary span{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.summary strong{margin-top:5px;font-size:20px}.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.tools input,.tools select,.tools a,.tools button{height:38px;border:1px solid #c6d0da;background:#fff;padding:0 12px;color:var(--ink);font:inherit}.tools input{flex:1;min-width:250px}.tools select{min-width:190px}.tools a,.tools button{display:inline-flex;align-items:center;text-decoration:none;cursor:pointer}.tools a.primary{border-color:var(--red);background:var(--red);color:#fff}.note{margin:0 0 12px;color:var(--muted);font-size:11px}.table-shell{overflow:auto;max-height:calc(100vh - 280px);border:1px solid #c6d0da;background:#fff}table{width:100%;min-width:2200px;border-collapse:separate;border-spacing:0}th{position:sticky;top:0;z-index:2;padding:11px 10px;background:var(--ink);color:#fff;border-right:1px solid rgba(255,255,255,.18);text-align:left;font-size:10px;letter-spacing:.03em;white-space:nowrap}td{padding:10px;border-right:1px solid #edf0f3;border-bottom:1px solid #e5e9ed;vertical-align:top;line-height:1.45}tbody tr:hover{background:#f0f5f8}td:first-child{color:var(--blue);font-family:Consolas,monospace;font-size:11px;white-space:nowrap}td.long{min-width:320px}td.nowrap{white-space:nowrap}.status{display:inline-block;padding:4px 8px;border:1px solid currentColor;font-size:10px;font-weight:700;white-space:nowrap}.baru{color:var(--blue);background:#eef4fc}.aktif{color:var(--amber);background:#fff8e9}.selesai{color:var(--green);background:#edf7f0}.menunggu{color:#a94e22;background:#fff4ed}.empty{display:none;padding:36px;text-align:center;color:var(--muted)}footer{padding:0 30px 24px;color:var(--muted);font-size:11px}@media(max-width:700px){header,.wrap,footer{padding-left:15px;padding-right:15px}.summary div{min-width:50%;border-bottom:1px solid var(--line)}.tools input,.tools select{width:100%;flex:auto}.table-shell{max-height:calc(100vh - 360px)}}
   </style>
 </head>
 <body>
   <header>
-    <h1>Tracking Laporan KSP Mendekat</h1>
-    <p>Satu baris untuk setiap laporan. Halaman ini hanya membaca data tabel; penambahan dan perubahan data dilakukan melalui Google Sheets atau file Excel.</p>
+    <h1>Tracker Pelapor OCA — KSP Mendekat</h1>
+    <p>Satu baris untuk setiap pelapor. Perubahan data tetap dilakukan di Google Sheets atau file Excel; halaman ini menampilkan snapshot tabel yang sudah disamarkan.</p>
   </header>
   <main class="wrap">
-    <section class="summary" aria-label="Ringkasan laporan">
-      <div><span>Total laporan</span><strong id="total">0</strong></div>
-      <div><span>Masih aktif</span><strong id="active">0</strong></div>
-      <div><span>Selesai ditangani</span><strong id="resolved">0</strong></div>
-      <div><span>Ditutup</span><strong id="closed">0</strong></div>
+    <section class="summary" aria-label="Ringkasan pelapor">
+      <div><span>Total pelapor</span><strong id="total">0</strong></div>
+      <div><span>Baru</span><strong id="new">0</strong></div>
+      <div><span>Dalam proses</span><strong id="active">0</strong></div>
+      <div><span>Selesai / ditutup</span><strong id="resolved">0</strong></div>
     </section>
     <div class="tools">
-      <input id="search" type="search" placeholder="Cari nomor, nama, isi laporan, kategori, atau petugas" aria-label="Cari laporan">
-      <select id="status" aria-label="Filter status"><option value="">Semua status</option></select>
+      <input id="search" type="search" placeholder="Cari nama, kanal, alamat, kategori, aspirasi, atau catatan" aria-label="Cari pelapor">
+      <select id="status" aria-label="Filter status tindak lanjut"><option value="">Semua status tindak lanjut</option></select>
       <button id="reset" type="button">Hapus filter</button>
-      <a href="/data/Tracking_Laporan_KSP_Mendekat.xlsx" download>Unduh untuk Sheets</a>
-      <a class="primary" href="/data/laporan-ksp-mendekat.csv" download>Unduh CSV</a>
+      <a href="/data/Tracker_Pelapor_OCA_KSP_Mendekat_Dashboard.xlsx" download>Unduh Excel tersamar</a>
+      <a class="primary" href="/data/laporan-ksp-mendekat.csv" download>Unduh CSV tersamar</a>
     </div>
-    <p class="note"><span id="shown">0</span> laporan ditampilkan · Data contoh bersifat fiktif · Terakhir diperbarui 27 Juli 2026</p>
+    <p class="note"><span id="shown">0</span> pelapor ditampilkan · Sumber: Tracker_Pelapor_OCA_KSP_Mendekat.xlsx · Snapshot 27 Juli 2026 · Kontak disamarkan</p>
     <div class="table-shell">
       <table>
         <thead><tr id="head"></tr></thead>
         <tbody id="body"></tbody>
       </table>
-      <div class="empty" id="empty">Tidak ada laporan yang sesuai dengan filter.</div>
+      <div class="empty" id="empty">Tidak ada pelapor yang sesuai dengan filter.</div>
     </div>
   </main>
-  <footer>Kolom utama: ID laporan, tanggal masuk, nama dan kontak pelapor, lokasi, isi laporan, kategori, prioritas, status, penanggung jawab, tanggal update, target internal, dan catatan penanganan.</footer>
+  <footer>Kolom mengikuti workbook sumber: tanggal masuk, kanal, nama dan kontak pelapor, alamat, status pelapor, kategori aduan, ringkasan aspirasi, lampiran, status tindak lanjut, tanggal update terakhir, dan catatan.</footer>
   <script>
-    const state={headers:[],rows:[]};
-    const activeStatuses=new Set(["Laporan masuk","Ditugaskan","Dalam penanganan","Menunggu pelapor"]);
-    const clean=v=>v.trim();
-    function statusClass(value){if(value==="Ditutup")return"tutup";if(value==="Selesai ditangani")return"selesai";if(value.includes("Menunggu"))return"menunggu";return"aktif"}
-    function render(){const query=document.querySelector("#search").value.toLowerCase();const status=document.querySelector("#status").value;const rows=state.rows.filter(row=>(!query||row.join(" ").toLowerCase().includes(query))&&(!status||row[8]===status));const body=document.querySelector("#body");body.innerHTML=rows.map(row=>`<tr>${row.map((cell,index)=>index===8?`<td><span class="status ${statusClass(cell)}">${cell}</span></td>`:`<td>${cell||"-"}</td>`).join("")}</tr>`).join("");document.querySelector("#shown").textContent=rows.length;document.querySelector("#empty").style.display=rows.length?"none":"block"}
-    async function load(){const response=await fetch("/data/laporan-ksp-mendekat.csv");const text=await response.text();const lines=text.trim().split(/\r?\n/).map(line=>line.split(";").map(clean));state.headers=lines.shift();state.rows=lines;document.querySelector("#head").innerHTML=state.headers.map(header=>`<th>${header}</th>`).join("");const statuses=[...new Set(state.rows.map(row=>row[8]))];document.querySelector("#status").innerHTML+=[...statuses].sort().map(value=>`<option>${value}</option>`).join("");document.querySelector("#total").textContent=state.rows.length;document.querySelector("#active").textContent=state.rows.filter(row=>activeStatuses.has(row[8])).length;document.querySelector("#resolved").textContent=state.rows.filter(row=>row[8]==="Selesai ditangani").length;document.querySelector("#closed").textContent=state.rows.filter(row=>row[8]==="Ditutup").length;render()}
+    const state={headers:[],rows:[],statusIndex:-1};
+    const resolvedStatuses=new Set(["selesai","selesai ditangani","ditutup"]);
+    const clean=value=>value.trim();
+    function parseCsv(text){const rows=[];let row=[],cell="",quoted=false;for(let i=0;i<text.length;i++){const char=text[i];if(quoted){if(char==='"'&&text[i+1]==='"'){cell+='"';i++}else if(char==='"'){quoted=false}else{cell+=char}}else if(char==='"'){quoted=true}else if(char===";"){row.push(clean(cell));cell=""}else if(char==="\n"){row.push(clean(cell.replace(/\r$/,"")));if(row.some(Boolean))rows.push(row);row=[];cell=""}else{cell+=char}}if(cell||row.length){row.push(clean(cell));if(row.some(Boolean))rows.push(row)}return rows}
+    function statusClass(value){const normalized=value.toLowerCase();if(resolvedStatuses.has(normalized))return"selesai";if(normalized.includes("menunggu"))return"menunggu";if(normalized==="baru")return"baru";return"aktif"}
+    function makeCell(value,index){const td=document.createElement("td");const header=state.headers[index]||"";if(["Ringkasan Aspirasi","Alamat","Catatan"].includes(header))td.classList.add("long");if(["Tanggal Masuk","Tanggal Update Terakhir","Kanal"].includes(header))td.classList.add("nowrap");if(index===state.statusIndex){const badge=document.createElement("span");badge.className=`status ${statusClass(value)}`;badge.textContent=value||"-";td.append(badge)}else{td.textContent=value||"-"}return td}
+    function render(){const query=document.querySelector("#search").value.toLowerCase();const status=document.querySelector("#status").value;const rows=state.rows.filter(row=>(!query||row.join(" ").toLowerCase().includes(query))&&(!status||row[state.statusIndex]===status));const body=document.querySelector("#body");body.replaceChildren(...rows.map(row=>{const tr=document.createElement("tr");tr.append(...row.map(makeCell));return tr}));document.querySelector("#shown").textContent=rows.length;document.querySelector("#empty").style.display=rows.length?"none":"block"}
+    async function load(){const response=await fetch("/data/laporan-ksp-mendekat.csv");if(!response.ok)throw new Error("Data tidak dapat dimuat.");const lines=parseCsv(await response.text());state.headers=lines.shift()||[];state.rows=lines;state.statusIndex=state.headers.indexOf("Status Tindak Lanjut");const head=document.querySelector("#head");head.replaceChildren(...state.headers.map(header=>{const th=document.createElement("th");th.textContent=header;return th}));const statuses=[...new Set(state.rows.map(row=>row[state.statusIndex]).filter(Boolean))].sort();const filter=document.querySelector("#status");filter.append(...statuses.map(value=>{const option=document.createElement("option");option.value=value;option.textContent=value;return option}));const normalized=row=>(row[state.statusIndex]||"").toLowerCase();document.querySelector("#total").textContent=state.rows.length;document.querySelector("#new").textContent=state.rows.filter(row=>normalized(row)==="baru").length;document.querySelector("#resolved").textContent=state.rows.filter(row=>resolvedStatuses.has(normalized(row))).length;document.querySelector("#active").textContent=state.rows.filter(row=>normalized(row)!=="baru"&&!resolvedStatuses.has(normalized(row))).length;render()}
     document.querySelector("#search").addEventListener("input",render);document.querySelector("#status").addEventListener("change",render);document.querySelector("#reset").addEventListener("click",()=>{document.querySelector("#search").value="";document.querySelector("#status").value="";render()});load();
   </script>
 </body>
