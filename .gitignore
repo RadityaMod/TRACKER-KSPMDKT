@@ -42,3 +42,29 @@ next-env.d.ts
 /work/
 
 spreadsheet-build/node_modules/
+.codex-spreadsheet-work/node_modules/
+
+# ---------------------------------------------------------------------------
+# DATA PELAPOR — JANGAN PERNAH DI-COMMIT
+#
+# File di bawah memuat nomor telepon, NIK, dan alamat rumah orang yang
+# melapor soal oknum polisi, TNI, dan pejabat daerah. History git bersifat
+# permanen: sekali ter-commit dan ter-push, menghapusnya butuh force-push dan
+# tetap tersimpan di setiap clone yang sudah terlanjur dibuat.
+#
+# Sumber kebenaran sekarang adalah Google Sheets (privat, dibagikan ke service
+# account). Tidak ada satu pun file di bawah yang perlu masuk repo.
+# ---------------------------------------------------------------------------
+Dashboard_Pelapor_OCA_Local.html
+web/data/laporan.csv
+vercel-dashboard/index.html
+
+# Direktori kerja tool. tracker-preview-before.png adalah tangkapan layar
+# spreadsheet yang memperlihatkan nama pelapor, alamat rumah, NIK, dan nomor
+# telepon secara terbaca — PII dalam bentuk gambar tidak kalah sensitif
+# dibanding teks, dan tidak bisa di-grep.
+.codex-spreadsheet-work/
+
+# Artefak cetak — 83 MB berkas biner. Git menyimpan biner dengan buruk dan
+# blob-nya menetap di history selamanya walau filenya kemudian dihapus.
+/output/

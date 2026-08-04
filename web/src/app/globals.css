@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/*
+  Design token diambil dari "Color Pallet.jpeg".
+
+  Catatan: beberapa label di file JPEG itu salah — "Icy Grey" ditulis #FFE8DB
+  (warna peach) padahal swatch-nya biru keabuan, dan "Dark Graphic" /
+  "Authentic Black" / "Old Grey" ketiganya ditulis #08080C padahal tiga nada
+  berbeda. Delapan warna biru & netral di bawah ini cocok dengan labelnya;
+  nada gelap dinamai ulang agar jujur terhadap penggunaannya.
+*/
+@theme {
+  --color-regal-blue: #03355e;
+  --color-endless-sky: #024c7b;
+  --color-smothe-blue: #0796d7;
+  --color-royal-light-blue: #8dc8ef;
+
+  --color-white-sand: #edeae5;
+  --color-smooth-white: #dcd8d2;
+  --color-slient-grey: #d2d3cc;
+  --color-cute-silver: #e3e6eb;
+
+  --color-ink: #08080c;
+  --color-ink-soft: #333338;
+  --color-ink-muted: #5c6470;
+
+  /*
+    Token semantik yang dibutuhkan komponen shadcn/ui (chart, card).
+    Dipetakan ke palet di atas, bukan warna default shadcn, supaya grafik
+    menyatu dengan sisa dashboard.
+  */
+  --color-background: #ffffff;
+  --color-foreground: #333338;
+  --color-muted: #edeae5;
+  --color-muted-foreground: #5c6470;
+  --color-border: #d2d3cc;
+  --color-card: #ffffff;
+  --color-card-foreground: #333338;
+}
+
+/*
+  Warna seri grafik — sengaja nilai literal di :root, BUKAN lewat @theme.
+
+  Tailwind 4 melakukan tree-shaking pada variabel @theme: hanya yang dipakai
+  oleh utility yang benar-benar di-emit. Karena tidak ada satu pun kelas
+  seperti `bg-chart-1` di kode ini, --color-chart-1 akan hilang dari CSS
+  hasil build, dan var(--chart-1) di komponen chart jadi menunjuk ke nilai
+  kosong — garis grafik ter-render dengan `stroke: none`, alias tak terlihat.
+*/
+:root {
+  --chart-1: #0796d7;
+  --chart-2: #03355e;
+  --chart-3: #8dc8ef;
+  --chart-4: #024c7b;
+  --chart-5: #5c6470;
+}
+
+@layer base {
+  html {
+    background: var(--color-white-sand);
+  }
+
+  body {
+    color: var(--color-ink-soft);
+    font-family: "Segoe UI Variable", "Aptos", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Fokus terlihat konsisten di seluruh kontrol. */
+  :focus-visible {
+    outline: 2px solid var(--color-smothe-blue);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

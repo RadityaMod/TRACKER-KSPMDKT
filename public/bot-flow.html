@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bot Flow — KSP Mendekat</title>
+  <style>
+    :root {
+      --ink: #17263f; --muted: #687489; --paper: #f5f7f9; --line: #dce3e9;
+      --red: #c43b46; --green: #2e7650; --amber: #9a641a; --blue: #2d61a8;
+      --wa: #25D366; --wa-dark: #128C7E;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--paper); color: var(--ink); font-family: Arial, "Segoe UI", sans-serif; font-size: 13px; }
+    header { padding: 24px 30px 18px; background: #fff; border-bottom: 1px solid var(--line); }
+    header h1 { font-size: 22px; margin-bottom: 5px; }
+    header p { color: var(--muted); font-size: 12px; }
+    .main { display: flex; gap: 0; height: calc(100vh - 80px); }
+
+    /* LEFT: Flow diagram */
+    .flow-panel { width: 55%; border-right: 1px solid var(--line); overflow-y: auto; padding: 20px; background: #fff; }
+    .flow-panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 16px; }
+
+    .flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+    .node { position: relative; width: 100%; max-width: 460px; }
+    .box { border: 2px solid var(--line); border-radius: 6px; padding: 12px 16px; background: #fff; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+    .box:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(45,97,168,.12); }
+    .box.active { border-color: var(--blue); background: #f0f5fd; }
+    .box.decision { border-radius: 0; transform: none; background: #fffbf0; border-color: var(--amber); }
+    .box.end { border-color: var(--green); background: #f0f9f4; }
+    .box.start { border-color: var(--wa-dark); background: #f0fdf4; }
+    .box-label { font-size: 9px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 4px; }
+    .box-title { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+    .box-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+    .box-tag { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-top: 6px; }
+    .tag-bot { background: #e8f0fd; color: var(--blue); }
+    .tag-user { background: #e8f7ef; color: var(--green); }
+    .tag-system { background: #f3f0fd; color: #5b3ea8; }
+
+    .arrow { display: flex; flex-direction: column; align-items: center; height: 32px; }
+    .arrow-line { width: 2px; flex: 1; background: var(--line); }
+    .arrow-head { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid var(--line); }
+    .arrow-label { font-size: 10px; color: var(--muted); background: var(--paper); padding: 0 6px; margin-top: -2px; }
+
+    .branch { display: flex; gap: 12px; width: 100%; max-width: 460px; }
+    .branch-item { flex: 1; display: flex; flex-direction: column; align-items: center; }
+    .branch-label { font-size: 10px; color: var(--amber); font-weight: 700; margin-bottom: 4px; }
+
+    /* RIGHT: Simulator */
+    .sim-panel { width: 45%; display: flex; flex-direction: column; background: #e5ddd5; }
+    .sim-header { background: var(--wa-dark); color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+    .sim-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--wa); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #fff; flex-shrink: 0; }
+    .sim-name { font-weight: 700; font-size: 14px; }
+    .sim-status { font-size: 11px; opacity: .8; }
+    .sim-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .msg { max-width: 78%; padding: 8px 11px; border-radius: 8px; font-size: 12px; line-height: 1.5; position: relative; }
+    .msg.bot { background: #fff; align-self: flex-start; border-top-left-radius: 2px; }
+    .msg.user { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 2px; }
+    .msg-time { font-size: 10px; color: var(--muted); text-align: right; margin-top: 3px; }
+    .msg-options { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+    .msg-option { background: #f0f8ff; border: 1px solid #b8d4f0; border-radius: 5px; padding: 6px 10px; cursor: pointer; font-size: 11px; color: var(--blue); transition: background .12s; text-align: left; }
+    .msg-option:hover { background: #ddeeff; }
+    .sim-input { display: flex; gap: 8px; padding: 10px 12px; background: #f0f0f0; border-top: 1px solid #d0d0d0; }
+    .sim-input input { flex: 1; border: none; border-radius: 20px; padding: 8px 14px; font-size: 12px; background: #fff; outline: none; }
+    .sim-input button { background: var(--wa); color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+    .sim-reset { margin: 0 12px 8px; }
+    .sim-reset button { width: 100%; padding: 7px; background: transparent; border: 1px solid #bbb; border-radius: 5px; font-size: 11px; color: var(--muted); cursor: pointer; }
+    .sim-reset button:hover { background: #e0e0e0; }
+
+    @media (max-width: 700px) {
+      .main { flex-direction: column; height: auto; }
+      .flow-panel, .sim-panel { width: 100%; }
+      .sim-panel { height: 500px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Bot Flow — KSP Mendekat</h1>
+  <p>Alur percakapan bot WhatsApp/OCA untuk menerima laporan dan aspirasi masyarakat. Klik node untuk melihat detail di simulator.</p>
+</header>
+<div class="main">
+
+  <!-- LEFT: Flow -->
+  <div class="flow-panel">
+    <h2>Diagram Alur Bot</h2>
+    <div class="flow">
+
+      <div class="node">
+        <div class="box start" id="n-start" onclick="jumpTo('start')">
+          <div class="box-label">Pemicu</div>
+          <div class="box-title">📱 Pesan Masuk</div>
+          <div class="box-desc">Masyarakat menghubungi nomor WA / akun OCA KSP Mendekat untuk pertama kali atau mengirim pesan apapun.</div>
+          <span class="box-tag tag-user">Aksi pengguna</span>
+        </div>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node">
+        <div class="box" id="n-greet" onclick="jumpTo('greet')">
+          <div class="box-label">Step 1</div>
+          <div class="box-title">👋 Sambutan Otomatis</div>
+          <div class="box-desc">Bot kirim salam, perkenalan singkat KSP Mendekat, dan menu pilihan utama.</div>
+          <span class="box-tag tag-bot">Bot merespons</span>
+        </div>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node">
+        <div class="box decision" id="n-menu" onclick="jumpTo('menu')">
+          <div class="box-label">Step 2 — Pilihan</div>
+          <div class="box-title">📋 Menu Utama</div>
+          <div class="box-desc">Pengguna memilih kategori: Sampaikan Aspirasi · Laporkan Aduan · Tanya Program · Hubungi Staf</div>
+          <span class="box-tag tag-user">Aksi pengguna</span>
+        </div>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label">Aspirasi / Aduan</div>
+          <div class="box" id="n-collect" onclick="jumpTo('collect')">
+            <div class="box-label">Step 3a</div>
+            <div class="box-title">📝 Kumpulkan Data</div>
+            <div class="box-desc">Bot tanya nama, alamat/domisili, lalu isi pesan/aspirasi lengkap. Minta foto/lampiran jika ada.</div>
+            <span class="box-tag tag-bot">Bot merespons</span>
+          </div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label">Tanya Program</div>
+          <div class="box" id="n-faq" onclick="jumpTo('faq')">
+            <div class="box-label">Step 3b</div>
+            <div class="box-title">❓ FAQ Otomatis</div>
+            <div class="box-desc">Bot jawab pertanyaan umum tentang KSP Mendekat dari basis pengetahuan yang disiapkan.</div>
+            <span class="box-tag tag-bot">Bot merespons</span>
+          </div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label">Hubungi Staf</div>
+          <div class="box" id="n-forward" onclick="jumpTo('forward')">
+            <div class="box-label">Step 3c</div>
+            <div class="box-title">👤 Teruskan ke Staf</div>
+            <div class="box-desc">Bot beri info jam layanan dan nomor kontak staf, atau eskalasi ke human agent via OCA.</div>
+            <span class="box-tag tag-system">Handoff</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node">
+        <div class="box" id="n-confirm" onclick="jumpTo('confirm')">
+          <div class="box-label">Step 4</div>
+          <div class="box-title">✅ Konfirmasi Data</div>
+          <div class="box-desc">Bot tampilkan ringkasan laporan dan minta konfirmasi pengguna sebelum dicatat.</div>
+          <span class="box-tag tag-bot">Bot merespons</span>
+        </div>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node">
+        <div class="box" id="n-record" onclick="jumpTo('record')">
+          <div class="box-label">Step 5</div>
+          <div class="box-title">🗂️ Catat ke Tracker</div>
+          <div class="box-desc">Sistem otomatis masukkan data ke Tracker Pelapor OCA (spreadsheet / API), beri nomor tiket.</div>
+          <span class="box-tag tag-system">Sistem</span>
+        </div>
+      </div>
+
+      <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <div class="node">
+        <div class="box end" id="n-close" onclick="jumpTo('close')">
+          <div class="box-label">Step 6 — Selesai</div>
+          <div class="box-title">🎉 Laporan Diterima</div>
+          <div class="box-desc">Bot kirim nomor tiket, estimasi respons, dan pesan penutup. Tawarkan kembali ke menu utama.</div>
+          <span class="box-tag tag-bot">Bot merespons</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: Simulator -->
+  <div class="sim-panel">
+    <div class="sim-header">
+      <div class="sim-avatar">K</div>
+      <div>
+        <div class="sim-name">KSP Mendekat</div>
+        <div class="sim-status">Bot aktif · OCA / WhatsApp</div>
+      </div>
+    </div>
+    <div class="sim-messages" id="sim-messages"></div>
+    <div class="sim-reset"><button onclick="resetSim()">↺ Mulai ulang simulasi</button></div>
+    <div class="sim-input">
+      <input id="sim-input" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter') sendUserMsg()" />
+      <button onclick="sendUserMsg()">➤</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const now = () => {
+    const d = new Date();
+    return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  };
+
+  const FLOWS = {
+    start:   { step: 'start' },
+    greet:   { step: 'greet' },
+    menu:    { step: 'menu' },
+    collect: { step: 'collect' },
+    faq:     { step: 'faq' },
+    forward: { step: 'forward' },
+    confirm: { step: 'confirm' },
+    record:  { step: 'record' },
+    close:   { step: 'close' },
+  };
+
+  let state = { step: 'start', data: {} };
+  const msgs = document.getElementById('sim-messages');
+
+  function addMsg(text, type, options) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + type;
+    div.innerHTML = text.replace(/\n/g,'<br>');
+    if (options && options.length) {
+      const optDiv = document.createElement('div');
+      optDiv.className = 'msg-options';
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'msg-option';
+        btn.textContent = opt.label;
+        btn.onclick = () => { opt.action(); btn.parentElement.querySelectorAll('button').forEach(b=>b.disabled=true); };
+        optDiv.appendChild(btn);
+      });
+      div.appendChild(optDiv);
+    }
+    const time = document.createElement('div');
+    time.className = 'msg-time';
+    time.textContent = now();
+    div.appendChild(time);
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function delay(fn, ms) { setTimeout(fn, ms); }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.id = 'typing';
+    div.textContent = '...';
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function botSay(text, options, ms) {
+    return new Promise(resolve => {
+      showTyping();
+      delay(() => {
+        removeTyping();
+        addMsg(text, 'bot', options);
+        resolve();
+      }, ms || 700);
+    });
+  }
+
+  function userSay(text) {
+    addMsg(text, 'user');
+  }
+
+  async function runStep(step) {
+    state.step = step;
+    highlightNode(step);
+    if (step === 'start') {
+      await botSay('Halo! 👋\n\nSaya <b>Bot KSP Mendekat</b>. Selamat datang di saluran aspirasi dan pengaduan <b>Kantor Staf Presiden — Program Mendekat</b>.', null, 500);
+      await runStep('greet');
+    } else if (step === 'greet') {
+      await botSay('Kami di sini untuk mendengar suara Anda — aspirasi, masukan kebijakan, maupun aduan terkait program pemerintah.', null, 800);
+      await runStep('menu');
+    } else if (step === 'menu') {
+      await botSay('Silakan pilih:', [
+        { label: '1. 💬 Sampaikan Aspirasi / Masukan', action: () => { userSay('1. Sampaikan Aspirasi'); delay(() => runStep('collect'), 400); } },
+        { label: '2. 🚨 Laporkan Aduan', action: () => { userSay('2. Laporkan Aduan'); delay(() => runStep('collect'), 400); } },
+        { label: '3. ❓ Tanya Tentang Program', action: () => { userSay('3. Tanya Program'); delay(() => runStep('faq'), 400); } },
+        { label: '4. 👤 Hubungi Staf Langsung', action: () => { userSay('4. Hubungi Staf'); delay(() => runStep('forward'), 400); } },
+      ]);
+    } else if (step === 'collect') {
+      await botSay('Baik! Saya akan bantu catat laporan Anda.\n\nSebagai langkah pertama, boleh saya tahu <b>nama lengkap</b> dan <b>daerah/kabupaten</b> asal Anda?', null, 700);
+      state.step = 'collect-name';
+    } else if (step === 'collect-msg') {
+      await botSay('Terima kasih, <b>'+state.data.name+'</b> dari <b>'+state.data.daerah+'</b> 🙏\n\nSekarang silakan tuliskan <b>aspirasi, masukan, atau keluhan</b> Anda secara lengkap:', null, 700);
+      state.step = 'collect-msg';
+    } else if (step === 'collect-lampiran') {
+      await botSay('Apakah ada <b>foto, dokumen, atau lampiran</b> yang ingin disertakan?', [
+        { label: 'Ya, saya kirim sekarang', action: () => { userSay('Saya akan kirim foto'); delay(() => { state.data.lampiran = 'Ada'; runStep('confirm'); }, 400); } },
+        { label: 'Tidak ada lampiran', action: () => { userSay('Tidak ada'); delay(() => { state.data.lampiran = 'Tidak ada'; runStep('confirm'); }, 400); } },
+      ]);
+    } else if (step === 'confirm') {
+      await botSay('Baik! Berikut ringkasan laporan Anda:\n\n👤 Nama: <b>'+( state.data.name||'—')+'</b>\n📍 Daerah: <b>'+(state.data.daerah||'—')+'</b>\n📝 Aspirasi: <b>'+(state.data.message||'—')+'</b>\n📎 Lampiran: <b>'+(state.data.lampiran||'Tidak ada')+'</b>\n\nApakah data ini sudah benar?', [
+        { label: '✅ Ya, kirimkan', action: () => { userSay('Ya, kirimkan'); delay(() => runStep('record'), 500); } },
+        { label: '✏️ Koreksi data', action: () => { userSay('Koreksi data'); delay(() => runStep('collect'), 500); } },
+      ]);
+    } else if (step === 'record') {
+      await botSay('⏳ Sedang mencatat laporan ke sistem...', null, 400);
+      delay(() => runStep('close'), 1200);
+    } else if (step === 'close') {
+      const tiket = 'KSP-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
+      await botSay('✅ <b>Laporan Anda berhasil diterima!</b>\n\n🎫 No. Tiket: <b>'+tiket+'</b>\n⏰ Estimasi respons: 3–5 hari kerja\n\nTim KSP Mendekat akan menindaklanjuti laporan Anda. Terima kasih telah berpartisipasi! 🙏', [
+        { label: '🔙 Kembali ke Menu Utama', action: () => { userSay('Kembali ke menu'); delay(() => runStep('menu'), 400); } },
+      ]);
+    } else if (step === 'faq') {
+      await botSay('Tentu! Apa yang ingin Anda tanyakan tentang program KSP Mendekat?', [
+        { label: 'Apa itu KSP Mendekat?', action: () => { userSay('Apa itu KSP Mendekat?'); delay(() => answerFaq('what'), 400); } },
+        { label: 'Bagaimana cara melaporkan?', action: () => { userSay('Cara melaporkan?'); delay(() => answerFaq('how'), 400); } },
+        { label: 'Berapa lama direspons?', action: () => { userSay('Berapa lama direspons?'); delay(() => answerFaq('time'), 400); } },
+        { label: '↩ Kembali ke menu', action: () => { userSay('Kembali'); delay(() => runStep('menu'), 400); } },
+      ]);
+    } else if (step === 'forward') {
+      await botSay('Untuk berbicara langsung dengan staf KSP Mendekat:\n\n🕐 Jam layanan: Senin–Jumat, 08.00–17.00 WIB\n📞 Hubungi: (021) 2024-XXXX\n\nAtau kami dapat meneruskan pesan ini ke staf kami sekarang. Apakah Anda ingin melanjutkan?', [
+        { label: '✅ Teruskan ke staf', action: () => { userSay('Teruskan ke staf'); delay(() => botSay('Baik! Salah satu staf kami akan segera menghubungi Anda. Mohon tunggu ya 🙏', null, 700), 400); } },
+        { label: '↩ Kembali ke menu', action: () => { userSay('Kembali'); delay(() => runStep('menu'), 400); } },
+      ]);
+    }
+  }
+
+  async function answerFaq(type) {
+    const answers = {
+      what: 'KSP Mendekat adalah program Kantor Staf Presiden untuk mendengar langsung aspirasi dan aduan masyarakat dari berbagai penjuru Indonesia 🇮🇩',
+      how: 'Cukup kirim pesan ke saluran ini kapan saja. Bot kami akan membantu Anda mencatat laporan dan meneruskannya ke tim yang berwenang.',
+      time: 'Laporan Anda akan direspons dalam 3–5 hari kerja. Untuk aduan mendesak, pilih menu "Hubungi Staf" agar ditangani lebih cepat.',
+    };
+    await botSay(answers[type], [
+      { label: '❓ Pertanyaan lain', action: () => { userSay('Pertanyaan lain'); delay(() => runStep('faq'), 400); } },
+      { label: '📝 Buat Laporan', action: () => { userSay('Buat laporan'); delay(() => runStep('collect'), 400); } },
+    ]);
+  }
+
+  function sendUserMsg() {
+    const input = document.getElementById('sim-input');
+    const val = input.value.trim();
+    if (!val) return;
+    userSay(val);
+    input.value = '';
+    if (state.step === 'collect-name') {
+      const parts = val.split(/[,，\s]+/);
+      state.data.name = parts[0] || val;
+      state.data.daerah = parts.slice(1).join(' ') || 'tidak disebutkan';
+      delay(() => runStep('collect-msg'), 500);
+    } else if (state.step === 'collect-msg') {
+      state.data.message = val.length > 60 ? val.substring(0, 60) + '...' : val;
+      delay(() => runStep('collect-lampiran'), 500);
+    } else {
+      delay(() => botSay('Pesan Anda sudah kami terima. Ketik <b>menu</b> untuk kembali ke pilihan utama, atau lanjutkan bercerita 😊'), 600);
+    }
+  }
+
+  function highlightNode(step) {
+    document.querySelectorAll('.box').forEach(b => b.classList.remove('active'));
+    const map = { start:'n-start', greet:'n-greet', menu:'n-menu', collect:'n-collect', 'collect-name':'n-collect', 'collect-msg':'n-collect', 'collect-lampiran':'n-collect', faq:'n-faq', forward:'n-forward', confirm:'n-confirm', record:'n-record', close:'n-close' };
+    const el = document.getElementById(map[step]);
+    if (el) { el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  }
+
+  function jumpTo(step) {
+    resetSim();
+    delay(() => runStep(step), 100);
+  }
+
+  function resetSim() {
+    msgs.innerHTML = '';
+    state = { step: 'start', data: {} };
+    document.querySelectorAll('.box').forEach(b => b.classList.remove('active'));
+  }
+
+  // Auto-start
+  delay(() => runStep('start'), 300);
+</script>
+</body>
+</html>

@@ -1,98 +1,97 @@
-# vinext-starter
+# TRACKER-KSPMDKT
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Dashboard pelacakan laporan dan aspirasi masyarakat untuk **KSP Mendekat**.
+Membaca langsung dari Google Sheets sebagai satu-satunya sumber kebenaran.
 
-## Prerequisites
+## ⚠️ Data sensitif
 
-- Node.js `>=22.13.0`
+Sheet sumber memuat **nomor telepon, NIK, dan alamat rumah** orang yang
+melapor soal oknum kepolisian, TNI, dan pejabat daerah. Beberapa entri
+menyangkut pelajar dan keluarga rentan.
 
-## Quick Start
+Konsekuensinya:
+
+- **Aplikasi ini belum punya autentikasi.** Jalankan hanya di `localhost`.
+  Men-deploy-nya sekarang sama dengan mempublikasikan seluruh dataset.
+- Snapshot data, tangkapan layar spreadsheet, dan berkas `.env` **tidak pernah
+  di-commit** — lihat `.gitignore`. Jangan mengubah aturan itu.
+- Fixture test memakai nomor sintetis, bukan nomor pelapor sungguhan.
+
+## Menjalankan
 
 ```bash
+cd web
 npm install
 npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+Buka <http://localhost:3000>. Label di header menunjukkan sumber aktif:
+`Google Sheets` bila kredensial terpasang, `CSV lokal` bila tidak.
 
-## Included Shape
+### Menyambungkan ke Google Sheets
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+1. Buat service account di GCP, aktifkan **Google Sheets API**, unduh kunci JSON.
+2. Bagikan sheet ke `client_email` service account itu sebagai **Viewer**.
+3. Tulis `.env.local`:
 
-## Workspace Auth Headers
+   ```bash
+   node scripts/setup-env.mjs <path-ke-kunci.json> <SHEET_ID> "'Nama Tab'!A:N"
+   ```
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+4. Restart `npm run dev`.
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+Tanpa `.env.local`, aplikasi memakai `web/data/laporan.csv` — file itu
+di-gitignore, jadi tidak ada di clone bersih dan aplikasi akan menampilkan
+halaman error yang menjelaskan penyebabnya.
 
-Treat the full name as optional and fall back to email when it is absent:
+## Perintah
 
-```tsx
-import { headers } from "next/headers";
+| Perintah | Kegunaan |
+|---|---|
+| `npm run dev` | Server pengembangan (tanpa cache — tiap muat halaman ambil dari Sheets) |
+| `npm run build` | Build produksi |
+| `npm start` | Jalankan hasil build (cache ISR 5 menit aktif) |
+| `npm test` | 79 test unit |
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+## Kesegaran data
 
-  const displayName = fullName ?? email;
-  // ...
-}
+| Situasi | Kapan terbarui |
+|---|---|
+| Dev + refresh browser | Langsung |
+| Produksi, dibiarkan | Maksimal 5 menit (ISR) |
+| Produksi + tombol Refresh | Langsung (`revalidatePath`) |
+
+Halaman tidak menyegarkan dirinya sendiri — perlu muat ulang atau klik Refresh.
+
+## Struktur
+
+```
+web/src/
+  lib/data/
+    source.ts        Pemilihan sumber (Sheets / CSV lokal)
+    google-sheet.ts  Klien Sheets API + pemetaan error
+    schema.ts        Pemetaan nama kolom → tipe (menerima alias)
+    csv.ts           Parser CSV quote-aware
+    date.ts          Parsing DD/MM/YYYY eksplisit
+    metrics.ts       Logika status (aman untuk komponen klien)
+    traffic.ts       Agregasi harian
+    filter.ts        Cari / sortir / filter
+  components/        Tabel, dialog detail, grafik, metrik
+  app/               Route, Server Action refresh
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+Batas penting: hanya `lib/data/schema.ts` yang tahu nama kolom sheet, dan
+hanya `lib/data/` yang tahu dari mana data berasal.
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+## Dokumentasi
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+Desain lengkap, keputusan, dan daftar yang belum dikerjakan ada di
+[`docs/superpowers/specs/`](docs/superpowers/specs/).
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
+## Status
 
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
+Selesai: koneksi Sheets, cache + refresh manual, metrik, grafik traffic,
+pencarian, sortir, filter, modal detail, penanganan error, 79 test.
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+Belum: **autentikasi** (pemblokir deploy), test E2E/a11y, ESLint, fixture test
+ter-mask.

@@ -1,0 +1,306 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { formatShort } from "@/lib/data/date";
+import type { Report } from "@/lib/data/schema";
+import {
+  applyQuery,
+  nextSort,
+  uniqueStatuses,
+  type Query,
+  type SortDirection,
+  type SortKey,
+} from "@/lib/data/filter";
+import { ReportDetailDialog } from "./report-detail-dialog";
+import { StatusBadge } from "./status-badge";
+
+const SORTABLE = [
+  { key: "status", label: "Status" },
+  { key: "kanal", label: "Kanal" },
+  { key: "kategori", label: "Kategori" },
+] as const;
+
+function ariaSort(active: boolean, direction: SortDirection) {
+  if (!active || !direction) return "none" as const;
+  return direction === "asc" ? ("ascending" as const) : ("descending" as const);
+}
+
+function SortButton({
+  label,
+  active,
+  direction,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  direction: SortDirection;
+  onClick: () => void;
+}) {
+  const arrow = !active || !direction ? "—" : direction === "asc" ? "↑" : "↓";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 font-bold ${active ? "text-regal-blue" : ""}`}
+    >
+      {label}
+      <span
+        aria-hidden
+        className={`grid h-5 w-5 place-items-center rounded-full border text-[13px] leading-none ${
+          active
+            ? "border-royal-light-blue bg-sky-50 text-smothe-blue"
+            : "border-slient-grey text-ink-muted"
+        }`}
+      >
+        {arrow}
+      </span>
+    </button>
+  );
+}
+
+export function ReportsTable({ reports }: { reports: Report[] }) {
+  const params = useSearchParams();
+
+  const [query, setQuery] = useState<Query>(() => ({
+    search: params.get("q") ?? "",
+    status: params.get("status") ?? "",
+    sortKey: (params.get("sort") as SortKey) ?? null,
+    sortDirection: (params.get("dir") as SortDirection) ?? null,
+  }));
+
+  const [selected, setSelected] = useState<Report | null>(null);
+
+  // Cerminkan state ke URL tanpa navigasi server, supaya tampilan bisa
+  // dibagikan tapi filter tetap instan.
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (query.search) next.set("q", query.search);
+    if (query.status) next.set("status", query.status);
+    if (query.sortKey && query.sortDirection) {
+      next.set("sort", query.sortKey);
+      next.set("dir", query.sortDirection);
+    }
+    const qs = next.toString();
+    window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+  }, [query]);
+
+  const statuses = useMemo(() => uniqueStatuses(reports), [reports]);
+  const visible = useMemo(() => applyQuery(reports, query), [reports, query]);
+
+  const setSort = (key: Exclude<SortKey, null>) =>
+    setQuery((current) => ({ ...current, ...nextSort(current, key) }));
+
+  const reset = () =>
+    setQuery({ search: "", status: "", sortKey: null, sortDirection: null });
+
+  return (
+    <section
+      aria-label="Daftar pelapor"
+      className="overflow-hidden rounded-xl border border-slient-grey bg-white"
+    >
+      <div className="grid gap-2 border-b border-slient-grey p-3 sm:grid-cols-[minmax(0,1fr)_200px_auto]">
+        <div>
+          <label htmlFor="search" className="sr-only">
+            Cari pelapor atau aspirasi
+          </label>
+          <input
+            id="search"
+            type="search"
+            value={query.search}
+            onChange={(event) =>
+              setQuery((current) => ({ ...current, search: event.target.value }))
+            }
+            placeholder="Ketik nama, lokasi, atau kata kunci"
+            className="h-10 w-full rounded-lg border border-slient-grey px-3 outline-none focus:border-smothe-blue"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="statusFilter" className="sr-only">
+            Status tindak lanjut
+          </label>
+          <select
+            id="statusFilter"
+            value={query.status}
+            onChange={(event) =>
+              setQuery((current) => ({ ...current, status: event.target.value }))
+            }
+            disabled={statuses.length < 2}
+            className="h-10 w-full rounded-lg border border-slient-grey px-3 outline-none focus:border-smothe-blue disabled:bg-white-sand disabled:text-ink-muted"
+          >
+            <option value="">Semua status</option>
+            {statuses.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          type="button"
+          onClick={reset}
+          className="h-10 rounded-lg border border-slient-grey px-4 text-sm font-bold hover:bg-white-sand"
+        >
+          Hapus filter
+        </button>
+      </div>
+
+      {statuses.length < 2 && (
+        <p className="border-b border-slient-grey bg-sky-50 px-3 py-2 text-xs text-endless-sky">
+          Seluruh {reports.length} entri berstatus{" "}
+          <strong>{statuses[0] ?? "kosong"}</strong>, jadi filter status belum ada
+          gunanya. Tile Proses dan Selesai akan tetap nol sampai status di sumber
+          data diperbarui.
+        </p>
+      )}
+
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <caption className="sr-only">
+            Daftar pelapor KSP Mendekat, {visible.length} dari {reports.length} entri
+          </caption>
+          <thead>
+            <tr className="bg-cute-silver text-left text-[11px] tracking-wide text-ink-muted uppercase">
+              <th scope="col" className="px-3 py-2 font-bold">
+                No
+              </th>
+              <th scope="col" className="hidden px-3 py-2 font-bold md:table-cell">
+                Update
+              </th>
+              <th
+                scope="col"
+                className="px-3 py-2"
+                aria-sort={ariaSort(query.sortKey === "status", query.sortDirection)}
+              >
+                <SortButton
+                  label="Status"
+                  active={query.sortKey === "status"}
+                  direction={query.sortDirection}
+                  onClick={() => setSort("status")}
+                />
+              </th>
+              <th scope="col" className="px-3 py-2 font-bold">
+                Pelapor
+              </th>
+              <th
+                scope="col"
+                className="hidden px-3 py-2 lg:table-cell"
+                aria-sort={ariaSort(query.sortKey === "kanal", query.sortDirection)}
+              >
+                <SortButton
+                  label="Kanal"
+                  active={query.sortKey === "kanal"}
+                  direction={query.sortDirection}
+                  onClick={() => setSort("kanal")}
+                />
+              </th>
+              <th
+                scope="col"
+                className="hidden px-3 py-2 lg:table-cell"
+                aria-sort={ariaSort(query.sortKey === "kategori", query.sortDirection)}
+              >
+                <SortButton
+                  label="Kategori"
+                  active={query.sortKey === "kategori"}
+                  direction={query.sortDirection}
+                  onClick={() => setSort("kategori")}
+                />
+              </th>
+              {/* Menempel di tepi kanan: di layar sempit tabel di-scroll
+                  horizontal, dan tanpa ini tombol Detail ikut hilang ke luar
+                  layar sehingga baris tidak bisa dibuka lewat keyboard. */}
+              <th
+                scope="col"
+                className="sticky right-0 bg-cute-silver px-3 py-2 font-bold"
+              >
+                <span className="sr-only">Detail</span>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {visible.map((report) => (
+              <tr
+                key={report.no}
+                // Klik baris hanya kemudahan mouse — sengaja TANPA tabindex.
+                // Kontrol sungguhan adalah tombol Detail di kolom terakhir,
+                // supaya tidak ada dua tab stop untuk satu aksi.
+                onClick={() => setSelected(report)}
+                // bg-white eksplisit supaya sel Detail yang sticky punya latar
+                // solid saat baris di bawahnya lewat di belakangnya.
+                className="cursor-pointer border-t border-slient-grey bg-white hover:bg-sky-50/60"
+              >
+                <td className="px-3 py-2.5 align-top tabular-nums">{report.no}</td>
+
+                <td className="hidden px-3 py-2.5 align-top whitespace-nowrap tabular-nums md:table-cell">
+                  {report.tanggalUpdate ? formatShort(report.tanggalUpdate) : "—"}
+                </td>
+
+                <td className="px-3 py-2.5 align-top">
+                  <StatusBadge status={report.status} />
+                </td>
+
+                <td className="px-3 py-2.5 align-top">
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    {report.namaPelapor || "Tanpa nama"}
+                    {report.perluVerifikasi && (
+                      <span
+                        title="Perlu verifikasi"
+                        className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-900"
+                      >
+                        cek
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-ink-muted">
+                    {report.alamat || "Lokasi tidak tercatat"}
+                  </span>
+                  <span className="mt-1 block text-xs text-ink-muted lg:hidden">
+                    {report.kanal} · {report.kategori}
+                  </span>
+                </td>
+
+                <td className="hidden px-3 py-2.5 align-top lg:table-cell">
+                  <span className="rounded-md bg-sky-50 px-2 py-1 text-xs font-semibold text-endless-sky">
+                    {report.kanal || "—"}
+                  </span>
+                </td>
+
+                <td className="hidden px-3 py-2.5 align-top lg:table-cell">
+                  {report.kategori || "—"}
+                </td>
+
+                <td className="sticky right-0 bg-inherit px-3 py-2.5 text-right align-top">
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelected(report);
+                    }}
+                    className="rounded-lg border border-slient-grey bg-white px-3 py-1.5 text-xs font-bold text-regal-blue hover:bg-white-sand"
+                  >
+                    Detail
+                    <span className="sr-only"> {report.namaPelapor}</span>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {visible.length === 0 && (
+        <div className="px-4 py-12 text-center">
+          <strong className="block">Belum ada entri yang cocok</strong>
+          <span className="mx-auto mt-1 block max-w-md text-xs text-ink-muted">
+            Ubah kata pencarian atau hapus filter status untuk menampilkan kembali data.
+          </span>
+        </div>
+      )}
+
+      <ReportDetailDialog report={selected} onClose={() => setSelected(null)} />
+    </section>
+  );
+}
