@@ -57,7 +57,6 @@ spreadsheet-build/node_modules/
 # ---------------------------------------------------------------------------
 Dashboard_Pelapor_OCA_Local.html
 web/data/laporan.csv
-vercel-dashboard/index.html
 
 # Direktori kerja tool. tracker-preview-before.png adalah tangkapan layar
 # spreadsheet yang memperlihatkan nama pelapor, alamat rumah, NIK, dan nomor
