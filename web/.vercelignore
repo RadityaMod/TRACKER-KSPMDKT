@@ -1,0 +1,17 @@
+# Data pelapor lokal tidak boleh ikut ter-upload ke Vercel.
+# Production harus membaca Google Sheets lewat environment variables.
+data/
+*.csv
+*.xlsx
+*.xls
+
+# Secret lokal/service account.
+.env
+.env.*
+gen-lang-client-*.json
+
+# Tidak dibutuhkan saat deploy.
+tests/
+coverage/
+.next/
+node_modules/

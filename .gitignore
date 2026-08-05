@@ -67,3 +67,6 @@ web/data/laporan.csv
 # Artefak cetak — 83 MB berkas biner. Git menyimpan biner dengan buruk dan
 # blob-nya menetap di history selamanya walau filenya kemudian dihapus.
 /output/
+
+# Google service-account local key — jangan commit
+gen-lang-client-*.json

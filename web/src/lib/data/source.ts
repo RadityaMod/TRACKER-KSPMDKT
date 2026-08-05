@@ -79,6 +79,13 @@ function fallbackAllowed(): boolean {
   return process.env.ALLOW_LOCAL_FALLBACK?.trim().toLowerCase() === "true";
 }
 
+function isProductionDeployment(): boolean {
+  return (
+    process.env.VERCEL_ENV?.trim().toLowerCase() === "production" ||
+    process.env.NODE_ENV?.trim().toLowerCase() === "production"
+  );
+}
+
 /**
  * Pilih sumber aktif.
  *
@@ -87,14 +94,27 @@ function fallbackAllowed(): boolean {
  *
  * Bila Sheets dikonfigurasi tetapi gagal dibaca, secara default error-nya
  * dibiarkan naik ke halaman error. Setel ALLOW_LOCAL_FALLBACK=true untuk
- * menyajikan snapshot lokal disertai banner peringatan.
+ * menyajikan snapshot lokal disertai banner peringatan. Pada production,
+ * fallback lokal selalu dimatikan supaya Vercel tidak pernah menyajikan
+ * snapshot CSV.
  */
 export function getSource(): ReportSource {
   const config = readGoogleSheetConfig();
-  if (!config) return new LocalCsvSource(LOCAL_CSV);
+  const production = isProductionDeployment();
+
+  if (!config) {
+    if (production) {
+      throw new Error(
+        "Production wajib menggunakan Google Sheets. Pastikan SHEET_ID, SHEET_RANGE, dan GOOGLE_SERVICE_ACCOUNT_JSON sudah terisi di Vercel.",
+      );
+    }
+
+    return new LocalCsvSource(LOCAL_CSV);
+  }
 
   const sheets = new GoogleSheetSource(config);
-  return fallbackAllowed()
+  return fallbackAllowed() && !production
     ? new FallbackSource(sheets, new LocalCsvSource(LOCAL_CSV))
     : sheets;
 }
+

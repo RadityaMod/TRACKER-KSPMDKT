@@ -17,3 +17,8 @@ next-env.d.ts
 
 # test
 coverage/
+
+.vercel
+
+# Google service-account local key — jangan commit
+gen-lang-client-*.json
