@@ -1,17 +1,36 @@
 # Data pelapor lokal tidak boleh ikut ter-upload ke Vercel.
 # Production harus membaca Google Sheets lewat environment variables.
-data/
-*.csv
-*.xlsx
-*.xls
+
+# Jika .vercelignore dibaca dari root repo GitHub:
+/web/data/
+/web/data/laporan.csv
+/public/data/
+
+# Jika .vercelignore dibaca dari Root Directory Vercel (web):
+/data/
+/data/laporan.csv
+/public/data/
+
+# File spreadsheet/data mentah yang tidak boleh masuk deployment.
+/web/*.csv
+/web/*.xlsx
+/web/*.xls
+/*.csv
+/*.xlsx
+/*.xls
 
 # Secret lokal/service account.
-.env
-.env.*
-gen-lang-client-*.json
+/web/.env
+/web/.env.*
+/.env
+/.env.*
+/web/gen-lang-client-*.json
+/gen-lang-client-*.json
 
 # Tidak dibutuhkan saat deploy.
-tests/
-coverage/
-.next/
-node_modules/
+/web/tests/
+/tests/
+/coverage/
+/web/coverage/
+/web/.next/
+/web/node_modules/
