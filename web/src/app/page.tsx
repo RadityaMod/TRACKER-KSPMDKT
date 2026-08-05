@@ -140,7 +140,18 @@ function Shell({
           </strong>
           <span className="block truncate text-[10px] text-ink-muted">{source}</span>
         </div>
-        <RefreshButton />
+        <div className="flex shrink-0 items-center gap-2">
+          <RefreshButton />
+          <form action="/api/pin/logout" method="post">
+            <button
+              type="submit"
+              className="h-9 rounded-lg border border-slient-grey bg-white px-3 text-xs font-extrabold text-ink-muted transition hover:border-regal-blue hover:text-regal-blue"
+              aria-label="Kunci dashboard di perangkat ini"
+            >
+              Kunci
+            </button>
+          </form>
+        </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 p-3 sm:p-6">
