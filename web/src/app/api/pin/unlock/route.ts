@@ -6,6 +6,7 @@ import {
   PIN_COOKIE_NAME,
   verifyDashboardPin,
 } from "@/lib/auth/pin";
+import { pinAttemptLimiter } from "@/lib/auth/rate-limit";
 
 function safeRedirect(value: FormDataEntryValue | null): string {
   if (typeof value !== "string") return "/";
@@ -20,11 +21,39 @@ function pinUrl(request: NextRequest, error: string, redirectTo: string): URL {
   return url;
 }
 
+function clientKey(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwarded || request.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
+function rateLimitedResponse(
+  request: NextRequest,
+  redirectTo: string,
+  retryAfterSeconds: number,
+) {
+  const response = NextResponse.redirect(
+    pinUrl(request, "rate_limit", redirectTo),
+    303,
+  );
+  response.headers.set("Retry-After", String(retryAfterSeconds));
+  return response;
+}
+
 export async function POST(request: NextRequest) {
   const form = await request.formData();
   const redirectTo = safeRedirect(form.get("redirectTo"));
   const pin = form.get("pin");
 
+  const key = clientKey(request);
+
+  const currentLimit = pinAttemptLimiter.check(key);
+  if (!currentLimit.allowed) {
+    return rateLimitedResponse(
+      request,
+      redirectTo,
+      currentLimit.retryAfterSeconds,
+    );
+  }
   if (!dashboardPinConfigured()) {
     return NextResponse.redirect(pinUrl(request, "config", redirectTo), 303);
   }
@@ -34,6 +63,14 @@ export async function POST(request: NextRequest) {
   }
 
   if (!verifyDashboardPin(pin)) {
+    const nextLimit = pinAttemptLimiter.recordFailure(key);
+    if (!nextLimit.allowed) {
+      return rateLimitedResponse(
+        request,
+        redirectTo,
+        nextLimit.retryAfterSeconds,
+      );
+    }
     return NextResponse.redirect(pinUrl(request, "invalid", redirectTo), 303);
   }
 
@@ -43,6 +80,7 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.redirect(new URL(redirectTo, request.url), 303);
+  pinAttemptLimiter.reset(key);
   response.cookies.set(PIN_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

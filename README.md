@@ -1,21 +1,39 @@
 # TRACKER-KSPMDKT
 
 Dashboard pelacakan laporan dan aspirasi masyarakat untuk **KSP Mendekat**.
-Membaca langsung dari Google Sheets sebagai satu-satunya sumber kebenaran.
+Aplikasi utama berada di `web/` dan membaca Google Sheets sebagai sumber
+kebenaran produksi.
 
-## ⚠️ Data sensitif
+## ⚠️ Data sensitif dan akses internal
 
-Sheet sumber memuat **nomor telepon, NIK, dan alamat rumah** orang yang
-melapor soal oknum kepolisian, TNI, dan pejabat daerah. Beberapa entri
-menyangkut pelajar dan keluarga rentan.
+Sheet sumber memuat nomor telepon, NIK, alamat rumah, serta laporan tentang
+oknum aparat dan pejabat. URL Vercel tetap dapat dijangkau melalui internet,
+meskipun aplikasinya hanya ditujukan sebagai tool internal.
 
-Konsekuensinya:
+Kontrol akses yang berlaku:
 
-- **Aplikasi ini belum punya autentikasi.** Jalankan hanya di `localhost`.
-  Men-deploy-nya sekarang sama dengan mempublikasikan seluruh dataset.
-- Snapshot data, tangkapan layar spreadsheet, dan berkas `.env` **tidak pernah
-  di-commit** — lihat `.gitignore`. Jangan mengubah aturan itu.
-- Fixture test memakai nomor sintetis, bukan nomor pelapor sungguhan.
+- Dashboard dan endpoint privat dilindungi satu **shared PIN internal**.
+- `src/proxy.ts` memverifikasi signed session cookie sebelum request diteruskan.
+- Cookie bersifat `HttpOnly`, `SameSite=Lax`, `Secure` di production, dan berlaku
+  tujuh hari.
+- Lima kegagalan PIN dalam 15 menit dikunci sementara per alamat IP. Pembatas
+  ini best-effort per instance; gunakan Vercel Firewall/WAF sebagai lapisan
+  global bila endpoint menerima traffic yang tidak dipercaya.
+- Gunakan PIN kuat dan simpan `DASHBOARD_PIN_SECRET` yang acak serta berbeda dari
+  PIN. Jangan membagikan PIN di kanal publik.
+- Snapshot data, tangkapan layar spreadsheet, dan berkas `.env` tidak boleh
+  di-commit. Fixture test hanya memuat data sintetis.
+
+Konfigurasi minimum di `web/.env.local`:
+
+```bash
+DASHBOARD_PIN="PIN-internal-yang-kuat"
+DASHBOARD_PIN_SECRET="secret-acak-yang-berbeda-dari-PIN"
+```
+
+Di Vercel, kedua nilai wajib dikonfigurasi sebagai Environment Variables.
+Pertahankan Vercel Deployment Protection sampai gate PIN sudah di-deploy dan
+diuji pada URL production.
 
 ## Menjalankan
 
@@ -26,32 +44,36 @@ npm run dev
 ```
 
 Buka <http://localhost:3000>. Label di header menunjukkan sumber aktif:
-`Google Sheets` bila kredensial terpasang, `CSV lokal` bila tidak.
+`Google Sheets` bila kredensial terpasang, `CSV lokal` bila fallback lokal
+diizinkan.
 
 ### Menyambungkan ke Google Sheets
 
-1. Buat service account di GCP, aktifkan **Google Sheets API**, unduh kunci JSON.
-2. Bagikan sheet ke `client_email` service account itu sebagai **Viewer**.
+1. Buat service account di GCP, aktifkan **Google Sheets API**, lalu unduh kunci JSON.
+2. Bagikan sheet ke `client_email` service account sebagai **Viewer**.
 3. Tulis `.env.local`:
 
    ```bash
    node scripts/setup-env.mjs <path-ke-kunci.json> <SHEET_ID> "'Nama Tab'!A:N"
    ```
 
-4. Restart `npm run dev`.
+4. Tambahkan `DASHBOARD_PIN` dan `DASHBOARD_PIN_SECRET`, kemudian restart server.
 
-Tanpa `.env.local`, aplikasi memakai `web/data/laporan.csv` — file itu
-di-gitignore, jadi tidak ada di clone bersih dan aplikasi akan menampilkan
-halaman error yang menjelaskan penyebabnya.
+Fallback CSV produksi mati secara default. `ALLOW_LOCAL_FALLBACK=true` hanya
+untuk pengembangan lokal; jangan aktifkan pada Vercel karena snapshot dapat
+memuat PII dan menjadi usang.
 
 ## Perintah
 
 | Perintah | Kegunaan |
 |---|---|
-| `npm run dev` | Server pengembangan (tanpa cache — tiap muat halaman ambil dari Sheets) |
+| `npm run dev` | Server pengembangan |
 | `npm run build` | Build produksi |
-| `npm start` | Jalankan hasil build (cache ISR 5 menit aktif) |
-| `npm test` | 79 test unit |
+| `npm start` | Menjalankan hasil build |
+| `npm run lint` | Lint source, test, dan konfigurasi tanpa memindai output `.next` |
+| `npm test` | Unit/integration test termasuk auth dan rate limit |
+| `npm run test:e2e` | Playwright: anonymous access, PIN, logout, axe, touch target |
+| `npm run test:all` | Unit/integration lalu E2E |
 
 ## Kesegaran data
 
@@ -61,37 +83,30 @@ halaman error yang menjelaskan penyebabnya.
 | Produksi, dibiarkan | Maksimal 5 menit (ISR) |
 | Produksi + tombol Refresh | Langsung (`revalidatePath`) |
 
-Halaman tidak menyegarkan dirinya sendiri — perlu muat ulang atau klik Refresh.
-
 ## Struktur
 
-```
+```text
 web/src/
-  lib/data/
-    source.ts        Pemilihan sumber (Sheets / CSV lokal)
-    google-sheet.ts  Klien Sheets API + pemetaan error
-    schema.ts        Pemetaan nama kolom → tipe (menerima alias)
-    csv.ts           Parser CSV quote-aware
-    date.ts          Parsing DD/MM/YYYY eksplisit
-    metrics.ts       Logika status (aman untuk komponen klien)
-    traffic.ts       Agregasi harian
-    filter.ts        Cari / sortir / filter
-  components/        Tabel, dialog detail, grafik, metrik
-  app/               Route, Server Action refresh
+  proxy.ts           Proteksi route privat dengan signed cookie
+  lib/auth/           Token PIN dan rate limiter
+  lib/data/           Sheets/CSV, schema, parsing, metrik, filter
+  components/         Tabel, dialog detail, grafik, metrik
+  app/                Dashboard, PIN gate, dan endpoint auth/data
+web/tests/             Unit/integration test
+web/e2e/               Playwright + axe
 ```
-
-Batas penting: hanya `lib/data/schema.ts` yang tahu nama kolom sheet, dan
-hanya `lib/data/` yang tahu dari mana data berasal.
 
 ## Dokumentasi
 
-Desain lengkap, keputusan, dan daftar yang belum dikerjakan ada di
+Desain lengkap dan keputusan keamanan ada di
 [`docs/superpowers/specs/`](docs/superpowers/specs/).
 
 ## Status
 
-Selesai: koneksi Sheets, cache + refresh manual, metrik, grafik traffic,
-pencarian, sortir, filter, modal detail, penanganan error, 79 test.
+Selesai: koneksi Sheets, fallback lokal opt-in, cache + refresh manual, metrik,
+grafik, pencarian/sortir/filter, modal detail, shared PIN gate, signed cookie,
+rate limit best-effort, unit/integration test auth, Playwright/axe, touch target,
+dan konfigurasi lint yang mengabaikan output build.
 
-Belum: **autentikasi** (pemblokir deploy), test E2E/a11y, ESLint, fixture test
-ter-mask.
+Sebelum cutover production: isi environment Vercel, redeploy, uji gate PIN pada
+URL production, lalu putuskan apakah Deployment Protection tetap dipertahankan.

@@ -8,7 +8,12 @@ type PinPageProps = {
 function errorMessage(code?: string): string | undefined {
   if (code === "invalid") return "PIN belum cocok. Coba masukkan ulang.";
   if (code === "missing") return "Masukkan PIN terlebih dahulu.";
-  if (code === "config") return "PIN dashboard belum dikonfigurasi di Vercel.";
+  if (code === "config") {
+    return "PIN atau secret dashboard belum dikonfigurasi di Vercel.";
+  }
+  if (code === "rate_limit") {
+    return "Terlalu banyak percobaan. Tunggu 15 menit, lalu coba kembali.";
+  }
   return undefined;
 }
 
@@ -33,7 +38,7 @@ export default async function PinPage({ searchParams }: PinPageProps) {
             KSP Mendekat Tracker
           </h1>
           <p className="mt-2 text-sm leading-6 text-ink-muted">
-            Masukkan PIN untuk membuka dashboard. Satu PIN bisa dipakai di banyak perangkat yang berizin.
+            Masukkan PIN untuk membuka dashboard. Satu PIN internal bisa dipakai di perangkat tim yang berizin.
           </p>
         </div>
 

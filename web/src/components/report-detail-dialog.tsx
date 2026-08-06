@@ -87,13 +87,17 @@ export function ReportDetailDialog({
             <button
               type="button"
               onClick={() => ref.current?.close()}
-              className="shrink-0 rounded-lg border border-white/40 px-3 py-1.5 text-xs font-bold hover:bg-white/10"
+              className="min-h-11 shrink-0 rounded-lg border border-white/40 px-3 text-xs font-bold hover:bg-white/10"
             >
               Tutup
             </button>
           </header>
 
-          <div className="overflow-auto px-6 pb-6">
+          <div
+            className="overflow-auto px-6 pb-6"
+            tabIndex={0}
+            aria-label="Detail laporan yang dapat digulir"
+          >
             <div className="flex items-center justify-between gap-4 border-b border-slient-grey py-3">
               <StatusBadge status={report.status} />
               <span className="text-[11px] text-ink-muted">

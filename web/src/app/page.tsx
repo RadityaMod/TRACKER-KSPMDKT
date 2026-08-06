@@ -146,7 +146,7 @@ function Shell({
           <form action="/api/pin/logout" method="post">
             <button
               type="submit"
-              className="h-9 rounded-lg border border-slient-grey bg-white px-3 text-xs font-extrabold text-ink-muted transition hover:border-regal-blue hover:text-regal-blue"
+              className="min-h-11 rounded-lg border border-slient-grey bg-white px-3 text-xs font-extrabold text-ink-muted transition hover:border-regal-blue hover:text-regal-blue"
               aria-label="Kunci dashboard di perangkat ini"
             >
               Kunci

@@ -1,12 +1,12 @@
 # Desain: KSP Mendekat Tracker — Aplikasi Next.js
 
-**Tanggal:** 2026-08-03 (diperbarui 2026-08-04)
+**Tanggal:** 2026-08-03 (diperbarui 2026-08-06)
 **Status:** Terimplementasi — tersambung ke Google Sheets
 **Menggantikan:** `Dashboard_Pelapor_OCA_Local.html` (single-file, 101 entri)
 
 ---
 
-## 0. Keadaan Saat Ini (per 2026-08-04)
+## 0. Keadaan Saat Ini (per 2026-08-06)
 
 Aplikasi berjalan di `web/`, membaca langsung dari Google Sheets.
 
@@ -18,8 +18,8 @@ Aplikasi berjalan di `web/`, membaca langsung dari Google Sheets.
 | Jumlah entri | 103 |
 | Cache | ISR 5 menit + tombol Refresh (`revalidatePath`) |
 | Grafik | shadcn/ui + Recharts, lebar penuh, sumbu tanggal |
-| Test | 79 (64 + 15 yang butuh snapshot lokal) |
-| Auth | **BELUM ADA** — lihat §11 |
+| Test | Unit/integration auth + data, Playwright E2E, dan axe |
+| Auth | Shared PIN, signed cookie, proxy, dan rate limit best-effort |
 
 **Perbedaan dari rencana awal:**
 
@@ -35,7 +35,7 @@ Aplikasi berjalan di `web/`, membaca langsung dari Google Sheets.
    di sumber lain — kegagalan diam-diam yang sudah pernah terjadi.
 4. **Caching pakai ISR (`export const revalidate`)**, bukan `use cache` +
    `cacheComponents`. Lebih sederhana dan cukup untuk kebutuhan sekarang.
-5. **Auth belum dikerjakan.** Ini gap terbesar — lihat §11.
+5. **Shared PIN gate sudah aktif.** Model ini dipilih untuk tool internal; URL Vercel tetap internet-reachable sehingga PIN kuat, secret terpisah, dan proteksi perimeter tetap diperlukan.
 
 ---
 
@@ -64,7 +64,7 @@ ada satu sumber kebenaran yang hidup.
 
 - Aplikasi Next.js yang membaca langsung dari Google Sheets sebagai satu-satunya
   sumber kebenaran
-- Data PII hanya bisa diakses staf yang sudah login
+- Data PII hanya bisa diakses staf yang sudah membuka shared PIN gate
 - Feature parity dengan dashboard lama: metrik, grafik traffic, cari, sortir,
   filter status, modal detail
 - Memperbaiki keenam masalah di tabel atas
@@ -88,8 +88,8 @@ ada satu sumber kebenaran yang hidup.
 | Runtime | Next.js 16 App Router standar, proyek baru | `vinext` 0.0.50 pre-1.0, tidak mendukung seluruh permukaan Next.js |
 | Bahasa | TypeScript | Skema data punya 14 kolom; tipe mencegah salah nama kolom |
 | Styling | Tailwind CSS 4 | Menghapus 5 blok `!important` bertumpuk |
-| Akses | Wajib login, data lengkap | PII tidak boleh terekspos anonim |
-| Auth | Auth.js v5, Google provider + allowlist email | Staf sudah punya akun Google (mereka pakai Sheets) |
+| Akses | Wajib membuka shared PIN gate, data lengkap | PII tidak boleh terekspos anonim |
+| Auth | Satu shared PIN internal + signed cookie | Sesuai keputusan operasional untuk tool internal; tidak mengelola akun individual |
 | Sumber data | Sheets API v4 + service account | Sheet tetap privat; tidak ada URL publik berisi PII |
 | Ruang lingkup | Read-only | Scope terkecil yang aman |
 | Cache | 5 menit + tombol refresh manual | Hemat kuota API, tetap bisa dipaksa segar |
@@ -107,54 +107,51 @@ OpenAI Sites yang sekarang tetap hidup sampai cutover.
 
 ### 4.2 Struktur Modul
 
-```
+```text
 web/src/
-  lib/sheets/
-    client.ts        # JWT auth → sheets_v4 client. Satu-satunya file yang tahu soal Google.
-    schema.ts        # Zod: baris mentah → Report bertipe. Pemilik pemetaan nama kolom.
-    reports.ts       # getReports(): 'use cache' + cacheTag + cacheLife. Satu-satunya entry publik.
-    date.ts          # Parsing DD/MM/YYYY (lihat 5.2)
-  lib/auth.ts        # Konfigurasi Auth.js: Google provider + signIn allowlist callback
+  proxy.ts                 # Proteksi route privat sebelum request diteruskan
+  lib/auth/
+    pin.ts                 # Validasi PIN dan signed session cookie
+    rate-limit.ts          # Lockout best-effort per instance/IP
+  lib/data/                # Sheets/CSV, schema, parsing, metrik, filter
   app/
-    (dashboard)/     # route group ber-auth
-      page.tsx       # Server Component: auth() → getReports() → render
-      actions.ts     # Server Action: refreshReports()
-    login/page.tsx
-    api/auth/[...nextauth]/route.ts
-  components/        # presentational, tanpa akses data
-    reports-table.tsx
-    report-detail-dialog.tsx
-    traffic-chart.tsx
-    metrics-row.tsx
+    page.tsx               # Dashboard privat
+    pin/page.tsx           # Shared PIN gate
+    api/pin/unlock/        # Verifikasi PIN dan terbitkan cookie
+    api/pin/logout/        # Hapus cookie
+  components/              # Tabel, dialog, grafik, metrik
 ```
 
-**Batas yang penting:** tidak ada apa pun di luar `lib/sheets/` yang tahu nama
-kolom sheet. `schema.ts` memetakan `"Status Tindak Lanjut"` → `status` satu kali.
-Di HTML lama, `cell(row, "Status Tindak Lanjut")` tersebar di enam fungsi —
-mengganti nama kolom di Sheets berarti berburu ke seluruh markup.
+`src/proxy.ts` berada sejajar dengan `src/app`, mengikuti konvensi Next.js 16.
+Route `/pin`, `/api/pin/*`, dan asset framework bersifat publik; route lain
+memerlukan signed cookie yang valid.
 
-### 4.3 Alur Data
+**Batas yang penting:** hanya `lib/data/` yang mengetahui sumber dan nama kolom
+sheet. `schema.ts` memetakan nama kolom ke model `Report` satu kali.
 
+### 4.3 Alur Data dan Akses
+
+```text
+Request
+  → src/proxy.ts memverifikasi signed cookie
+      → tidak valid: redirect /pin?redirectTo=...
+      → valid: dashboard mengambil getReports()
+          → Sheets API dengan service account
+          → validasi schema → Report[]
+          → ReportsTable memfilter/sortir di browser
 ```
-Server Component
-  → auth()                       ← DI LUAR cache
-  → getReports()                 ← 'use cache', cacheTag('reports'), cacheLife(...)
-      → JWT(service account, spreadsheets.readonly)
-      → sheets.spreadsheets.values.get()
-      → Zod parse → Report[]
-  → <ReportsTable rows={...} />  ← client component, filtering in-memory
-```
 
-Dua detail kebenaran yang dikunci desain ini:
+Form PIN mengirim POST ke `/api/pin/unlock`. PIN benar menerbitkan cookie
+`HttpOnly`, `SameSite=Lax`, `Secure` di production selama tujuh hari. PIN salah
+dicatat per alamat IP; lima kegagalan dalam 15 menit memicu lockout sementara.
+Keberhasilan unlock mereset hitungan. Logout menghapus cookie.
 
-1. **`auth()` berada di LUAR fungsi ber-cache.** Jika pengecekan sesi ada di
-   dalam `use cache`, hasil otorisasi satu user akan ter-cache dan tersaji ke
-   user berikutnya. Cache hanya berisi data sheet — tidak pernah sesuatu yang
-   spesifik per-user.
-2. **`getReports()` mengembalikan SEMUA baris tanpa filter.** Filtering adalah
-   fungsi murni di client component, sehingga satu entri cache dipakai bersama
-   semua staf, bukan terpecah per query.
+Rate limiter in-memory adalah mitigasi best-effort per instance, bukan limit
+global lintas region/serverless instance. Vercel Firewall/WAF tetap menjadi
+lapisan perimeter yang direkomendasikan.
 
+`getReports()` mengembalikan semua baris tanpa filter. Filtering tetap fungsi
+murni di client agar satu hasil cache dapat dipakai semua sesi internal.
 ### 4.4 Caching
 
 ```ts
@@ -312,7 +309,7 @@ membayar round-trip.
 | Kolom wajib hilang | Halaman error menyebut kolom mana yang hilang |
 | Baris gagal parse | Baris di-skip, dihitung, dan ditampilkan sebagai banner peringatan — satu baris rusak tidak boleh menjatuhkan seluruh halaman |
 | Sheet kosong | Empty state, bukan crash |
-| User tidak di allowlist | Halaman "akses ditolak" yang jelas, bukan loop redirect diam |
+| PIN salah / limit tercapai | Pesan jelas; lima kegagalan per IP dikunci 15 menit |
 
 Prinsip: **kegagalan sebagian tidak boleh jadi kegagalan total.** Dashboard lama
 memuat seluruh CSV atau tidak sama sekali.
@@ -328,55 +325,59 @@ memuat seluruh CSV atau tidak sama sekali.
 | Agregasi metrik | Vitest | Perhitungan Total/Baru/Proses/Selesai |
 | Bucket traffic | Vitest | Gap hari, entri sehari banyak, ekor tidak diperpanjang |
 | Filter/sortir | Vitest | Fungsi murni, terpisah dari komponen |
-| Allowlist auth | Vitest | Email di/tidak di list, case-insensitive, `email_verified` false |
-| Halaman ber-auth | Playwright | Anonim di-redirect; user allowlist melihat data |
-| A11y | axe via Playwright | Tanpa violation di halaman utama dan modal terbuka |
+| Shared PIN + proxy | Vitest | Cookie, redirect, PIN benar/salah, logout, dan rate limit |
+| Flow akses | Playwright | Anonim di-redirect; PIN valid membuka dashboard; logout mengunci kembali |
+| A11y | axe via Playwright | PIN, dashboard, dan modal tanpa violation serius/kritis |
 
 Logika murni (parsing, agregasi, filter) sengaja diletakkan di luar komponen
 supaya bisa diuji tanpa render.
 
-**Fixture:** salinan sheet yang sudah di-mask (pola `62•• •••• 3389` seperti
-`public/data/laporan-ksp-mendekat.csv` yang sudah ada). **Tidak ada PII nyata di
-file test.**
+**Fixture:** dataset sintetis kecil di `tests/fixtures/laporan-e2e.csv`. **Tidak ada PII nyata di file test.**
 
 ---
 
 ## 9. Keamanan & PII
 
-- Sheet tetap privat; dibagikan ke email service account sebagai Viewer
-- Kredensial hanya di env vars server-side, tidak pernah `NEXT_PUBLIC_*`
-- `Dashboard_Pelapor_OCA_Local.html` masuk `.gitignore` (109 nomor telpon, 3 NIK)
-- Fixture test memakai data ter-mask
-- Halaman ber-auth memakai `export const dynamic = 'force-dynamic'`
-- Header `noindex` pada seluruh route ber-auth
+- Sheet tetap privat dan hanya dibagikan ke service account sebagai Viewer.
+- Kredensial dan PIN hanya berada di env server-side, bukan `NEXT_PUBLIC_*`.
+- Shared PIN dipilih secara sadar untuk tool internal; ini bukan identitas
+  individual dan tidak memberi audit per pengguna.
+- URL Vercel tetap dapat dijangkau dari internet. Gunakan PIN kuat,
+  `DASHBOARD_PIN_SECRET` acak yang berbeda dari PIN, Deployment Protection
+  selama rollout, serta Vercel Firewall/WAF bila diperlukan.
+- Signed cookie memakai `HttpOnly`, `SameSite=Lax`, `Secure` di production, dan
+  masa berlaku tujuh hari.
+- Lima PIN salah dalam 15 menit dikunci best-effort per IP/per instance.
+- Fallback CSV production mati secara default; snapshot PII tidak boleh ikut
+  bundle atau Git.
+- Fixture Playwright memakai data sintetis tanpa PII nyata.
+- Header `noindex` berlaku untuk aplikasi.
 
-**Risiko yang diterima secara sadar:** Approach A mengirim seluruh 101 baris —
-termasuk nomor telpon dan NIK — ke setiap browser yang terautentikasi. Ini
-konsisten dengan keputusan "login, data lengkap", tapi berarti payload hanya
-seaman allowlist-nya. Bila nanti perlu lebih ketat, jalan keluarnya adalah
-Approach B (filter di server) atau masking per-peran.
+**Risiko yang diterima secara sadar:** seluruh baris, termasuk PII, dikirim ke
+browser setelah shared PIN berhasil. Siapa pun yang mengetahui PIN memiliki
+akses yang sama dan aktivitasnya tidak dapat diatribusikan ke individu. Jika
+kebutuhan audit atau pemisahan akses meningkat, migrasikan ke SSO/allowlist
+individual dan pertimbangkan masking atau filter server-side.
 
 ### Environment Variables
 
 | Var | Kegunaan |
 |---|---|
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | JSON service account penuh, di-parse saat runtime |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | JSON service account penuh, server-side |
 | `SHEET_ID` | ID spreadsheet |
 | `SHEET_RANGE` | Tab + rentang, mis. `Sheet1!A:N` |
-| `AUTH_SECRET` | Signing sesi Auth.js |
-| `AUTH_GOOGLE_ID` | OAuth client ID |
-| `AUTH_GOOGLE_SECRET` | OAuth client secret |
-| `ALLOWED_EMAILS` | Allowlist staf, dipisah koma |
+| `DASHBOARD_PIN` | Shared PIN internal yang kuat |
+| `DASHBOARD_PIN_SECRET` | Secret acak terpisah untuk menandatangani sesi |
+| `ALLOW_LOCAL_FALLBACK` | Opt-in CSV lokal; harus mati di production |
 
 ---
-
 ## 10. Rencana Implementasi
 
 | Fase | Isi | Selesai bila |
 |---|---|---|
 | 0 | Scaffold `web/`, TS, Tailwind 4, Vitest, Playwright, `cacheComponents: true` | `npm run build` dan `npm test` hijau |
 | 1 | `lib/sheets/` — client, schema, date, reports + unit test | Test parsing & schema lulus dengan fixture ter-mask |
-| 2 | Auth.js + allowlist + halaman login + proteksi route | Anonim di-redirect; non-allowlist ditolak |
+| 2 | Shared PIN, signed cookie, proxy, dan rate limit | Anonim ditolak; test auth dan lockout lulus |
 | 3 | Design tokens + app shell + cek kontras | Token terpakai, kontras AA lulus |
 | 4 | `MetricsRow` + `ReportsTable` (cari/sortir/filter) + state URL | Parity dengan dashboard lama, klik baris berfungsi |
 | 5 | `ReportDetailDialog` + badge PERLU VERIFIKASI | Semua field tampil, fokus ter-trap, Esc menutup |
@@ -392,37 +393,35 @@ bergantung pada Fase 1 dan 3.
 
 ## 11. Yang Masih Terbuka
 
-### 🔴 Auth belum ada — pemblokir deploy
+### Gate deployment
 
-Keputusan di §3 adalah **wajib login, data lengkap**. Itu belum dikerjakan.
-Aplikasi saat ini menyajikan 103 nomor telepon, NIK, dan alamat rumah kepada
-siapa pun yang bisa mencapai halamannya.
+Auth aplikasi sudah tersedia sebagai shared PIN sesuai keputusan operasional.
+Sebelum cutover production:
 
-Selama berjalan di `localhost` ini aman. **Men-deploy-nya tanpa auth sama saja
-dengan mempublikasikan seluruh dataset.** Fase 2 (Auth.js + Google provider +
-`ALLOWED_EMAILS`) harus selesai sebelum deploy ke mana pun.
+1. Isi `DASHBOARD_PIN` yang kuat dan `DASHBOARD_PIN_SECRET` acak yang berbeda di
+   Vercel, lalu redeploy.
+2. Uji akses anonim, PIN salah/benar, logout, dan cookie langsung pada URL
+   production.
+3. Pertahankan Vercel Deployment Protection sampai pengujian tersebut lulus;
+   setelahnya owner memutuskan apakah lapisan itu tetap dipakai.
+4. Evaluasi Vercel Firewall/WAF untuk rate limit global karena limiter aplikasi
+   hanya best-effort per serverless instance.
+5. Pastikan `ALLOW_LOCAL_FALLBACK=false` dan sheet tidak publik.
 
 ### Lainnya
 
-1. **Daftar email staf** — siapa saja yang masuk `ALLOWED_EMAILS`?
-2. **Target deploy** — Vercel, atau host Node lain?
-3. **Cutover** — kapan `/dashboard.html` lama dan `vercel-dashboard/`
-   dipensiunkan? Keduanya masih memuat PII tanpa auth.
-4. **Status di luar `Baru`** — seluruh 103 baris masih `Baru`, jadi warna badge
-   untuk status lain belum pernah terlihat dengan data nyata.
-5. **Fixture test ter-mask** — §8 menetapkan fixture ter-mask, tapi test data
-   nyata masih membaca snapshot ber-PII yang kini di-gitignore. Test itu
-   di-skip di clone bersih. Fixture ter-mask sungguhan masih pekerjaan lanjutan.
-6. **Akses publik sheet** — belum dikonfirmasi apakah sheet masih terbuka untuk
-   "anyone with the link". Service account tidak membutuhkannya.
+1. **Cutover** — tentukan kapan `/dashboard.html` lama dan
+   `vercel-dashboard/` dipensiunkan; artefak lama tidak memakai gate Next.js.
+2. **Status di luar `Baru`** — warna badge status lain belum tervalidasi dengan
+   data production yang representatif.
+3. **Model akses berikutnya** — bila dibutuhkan audit per orang, revocation, atau
+   least privilege, ganti shared PIN dengan SSO dan allowlist individual.
 
 ---
-
 ## 12. Referensi
 
-- Next.js 16 `use cache` / `cacheLife` / `cacheTag` / `revalidateTag`
-  (via Context7 `/vercel/next.js/v16.2.9`)
-- Auth.js Google provider + `signIn` callback allowlist
-  (via Context7 `/nextauthjs/next-auth`)
-- google-auth-library JWT dari env var
-  (via Context7 `/googleapis/google-auth-library-nodejs`)
+- Next.js 16 `proxy.ts` dan penempatan di dalam `src` bila aplikasi memakai
+  `src/app` (dokumentasi resmi Next.js).
+- Playwright `webServer` untuk menjalankan server lokal selama E2E.
+- `@axe-core/playwright` untuk accessibility testing.
+- google-auth-library JWT dari env var untuk akses Sheets.

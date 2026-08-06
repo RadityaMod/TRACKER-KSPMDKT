@@ -38,7 +38,7 @@ function SortButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 font-bold ${active ? "text-regal-blue" : ""}`}
+      className={`inline-flex min-h-11 items-center gap-1.5 font-bold ${active ? "text-regal-blue" : ""}`}
     >
       {label}
       <span
@@ -113,7 +113,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
               setQuery((current) => ({ ...current, search: event.target.value }))
             }
             placeholder="Ketik nama, lokasi, atau kata kunci"
-            className="h-10 w-full rounded-lg border border-slient-grey px-3 outline-none focus:border-smothe-blue"
+            className="h-11 w-full rounded-lg border border-slient-grey px-3 outline-none focus:border-smothe-blue"
           />
         </div>
 
@@ -128,7 +128,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
               setQuery((current) => ({ ...current, status: event.target.value }))
             }
             disabled={statuses.length < 2}
-            className="h-10 w-full rounded-lg border border-slient-grey px-3 outline-none focus:border-smothe-blue disabled:bg-white-sand disabled:text-ink-muted"
+            className="h-11 w-full rounded-lg border border-slient-grey px-3 outline-none focus:border-smothe-blue disabled:bg-white-sand disabled:text-ink-muted"
           >
             <option value="">Semua status</option>
             {statuses.map((status) => (
@@ -142,7 +142,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
         <button
           type="button"
           onClick={reset}
-          className="h-10 rounded-lg border border-slient-grey px-4 text-sm font-bold hover:bg-white-sand"
+          className="h-11 rounded-lg border border-slient-grey px-4 text-sm font-bold hover:bg-white-sand"
         >
           Hapus filter
         </button>
@@ -299,7 +299,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                       event.stopPropagation();
                       setSelected(report);
                     }}
-                    className="rounded-lg border border-slient-grey bg-white px-3 py-1.5 text-xs font-bold text-regal-blue hover:bg-white-sand"
+                    className="min-h-11 rounded-lg border border-slient-grey bg-white px-3 text-xs font-bold text-regal-blue hover:bg-white-sand"
                   >
                     Detail
                     <span className="sr-only"> {report.namaPelapor}</span>

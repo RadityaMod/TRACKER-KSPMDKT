@@ -11,7 +11,7 @@ export function RefreshButton() {
       type="button"
       disabled={pending}
       onClick={() => startTransition(() => refreshData())}
-      className="shrink-0 rounded-lg border border-slient-grey px-3 py-1.5 text-xs font-bold text-regal-blue hover:bg-white-sand disabled:opacity-60"
+      className="min-h-11 shrink-0 rounded-lg border border-slient-grey px-3 text-xs font-bold text-regal-blue hover:bg-white-sand disabled:opacity-60"
     >
       {pending ? "Memuat…" : "Refresh data"}
       <span aria-live="polite" className="sr-only">

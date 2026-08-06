@@ -6,7 +6,7 @@
  */
 
 import { getSource } from "./source";
-import { parseReports, SchemaError, type Report } from "./schema";
+import { parseReports, type Report } from "./schema";
 
 export type { Report } from "./schema";
 export { SchemaError } from "./schema";

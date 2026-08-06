@@ -4,7 +4,7 @@ export const PIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const encoder = new TextEncoder();
 
 export function dashboardPinConfigured(): boolean {
-  return Boolean(getDashboardPin());
+  return Boolean(getDashboardPin() && getSessionSecret());
 }
 
 export function getDashboardPin(): string | undefined {
@@ -14,7 +14,7 @@ export function getDashboardPin(): string | undefined {
 
 function getSessionSecret(): string | undefined {
   const secret = process.env.DASHBOARD_PIN_SECRET?.trim();
-  return secret || getDashboardPin();
+  return secret || undefined;
 }
 
 function toHex(buffer: ArrayBuffer): string {

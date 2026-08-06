@@ -11,7 +11,8 @@
       --wa: #25D366; --wa-dark: #128C7E;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--paper); color: var(--ink); font-family: Arial, "Segoe UI", sans-serif; font-size: 13px; }
+    body { background: var(--paper); color: var(--ink); font-family: "Segoe UI Variable Text", "Aptos", "Segoe UI", sans-serif; font-size: 13px; }
+    h1, h2, .box-title, .sim-name { font-family: "Segoe UI Variable Display", "Aptos Display", "Segoe UI", sans-serif; }
     header { padding: 24px 30px 18px; background: #fff; border-bottom: 1px solid var(--line); }
     header h1 { font-size: 22px; margin-bottom: 5px; }
     header p { color: var(--muted); font-size: 12px; }
@@ -58,13 +59,13 @@
     .msg.user { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 2px; }
     .msg-time { font-size: 10px; color: var(--muted); text-align: right; margin-top: 3px; }
     .msg-options { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
-    .msg-option { background: #f0f8ff; border: 1px solid #b8d4f0; border-radius: 5px; padding: 6px 10px; cursor: pointer; font-size: 11px; color: var(--blue); transition: background .12s; text-align: left; }
+    .msg-option { min-height: 44px; background: #f0f8ff; border: 1px solid #b8d4f0; border-radius: 5px; padding: 8px 10px; cursor: pointer; font-size: 11px; color: var(--blue); transition: background .12s; text-align: left; }
     .msg-option:hover { background: #ddeeff; }
     .sim-input { display: flex; gap: 8px; padding: 10px 12px; background: #f0f0f0; border-top: 1px solid #d0d0d0; }
-    .sim-input input { flex: 1; border: none; border-radius: 20px; padding: 8px 14px; font-size: 12px; background: #fff; outline: none; }
-    .sim-input button { background: var(--wa); color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+    .sim-input input { min-height: 44px; flex: 1; border: none; border-radius: 22px; padding: 8px 14px; font-size: 16px; background: #fff; outline: none; }
+    .sim-input button { background: var(--wa); color: #fff; border: none; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
     .sim-reset { margin: 0 12px 8px; }
-    .sim-reset button { width: 100%; padding: 7px; background: transparent; border: 1px solid #bbb; border-radius: 5px; font-size: 11px; color: var(--muted); cursor: pointer; }
+    .sim-reset button { min-height: 44px; width: 100%; padding: 8px; background: transparent; border: 1px solid #bbb; border-radius: 5px; font-size: 11px; color: var(--muted); cursor: pointer; }
     .sim-reset button:hover { background: #e0e0e0; }
 
     @media (max-width: 700px) {

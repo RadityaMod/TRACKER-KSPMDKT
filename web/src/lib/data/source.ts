@@ -74,6 +74,11 @@ export class FallbackSource implements ReportSource {
 }
 
 const LOCAL_CSV = path.join(process.cwd(), "data", "laporan.csv");
+const E2E_CSV = path.join(process.cwd(), "tests", "fixtures", "laporan-e2e.csv");
+
+function localCsvPath(): string {
+  return process.env.PLAYWRIGHT_TEST === "1" ? E2E_CSV : LOCAL_CSV;
+}
 
 function fallbackAllowed(): boolean {
   return process.env.ALLOW_LOCAL_FALLBACK?.trim().toLowerCase() === "true";
@@ -109,12 +114,12 @@ export function getSource(): ReportSource {
       );
     }
 
-    return new LocalCsvSource(LOCAL_CSV);
+    return new LocalCsvSource(localCsvPath());
   }
 
   const sheets = new GoogleSheetSource(config);
   return fallbackAllowed() && !production
-    ? new FallbackSource(sheets, new LocalCsvSource(LOCAL_CSV))
+    ? new FallbackSource(sheets, new LocalCsvSource(localCsvPath()))
     : sheets;
 }
 

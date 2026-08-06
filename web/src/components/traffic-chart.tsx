@@ -139,7 +139,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
       </div>
 
       <details className="px-4 pb-4">
-        <summary className="cursor-pointer text-xs text-ink-muted">
+        <summary className="inline-flex min-h-11 cursor-pointer items-center text-xs text-ink-muted">
           Lihat data grafik sebagai tabel
         </summary>
         <div className="mt-2 max-h-56 overflow-auto rounded-lg border border-slient-grey">
