@@ -234,9 +234,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
           </thead>
 
           <tbody>
-            {visible.map((report, index) => {
-              const urut = index + 1;
-              return (
+            {visible.map((report) => (
               <tr
                 key={report.no}
                 // Klik baris hanya kemudahan mouse — sengaja TANPA tabindex.
@@ -247,8 +245,12 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                 // solid saat baris di bawahnya lewat di belakangnya.
                 className="cursor-pointer border-t border-slient-grey bg-white hover:bg-sky-50/60"
               >
+                {/* Nomor entri dari sheet, BUKAN posisi baris. Karena daftar
+                    diurutkan menurut tanggal, angkanya melompat-lompat — dan
+                    memang itu yang diinginkan: tiap baris harus bisa
+                    dicocokkan langsung ke spreadsheet. */}
                 <td className="px-3 py-2.5 align-top tabular-nums text-ink-muted">
-                  {urut}
+                  {report.no}
                 </td>
 
                 <td className="px-3 py-2.5 align-top whitespace-nowrap tabular-nums">
@@ -304,8 +306,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                   </button>
                 </td>
               </tr>
-              );
-            })}
+            ))}
           </tbody>
         </table>
       </div>
