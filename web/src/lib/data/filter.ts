@@ -5,7 +5,13 @@
 
 import type { Report } from "./schema";
 
-export type SortKey = "status" | "kanal" | "kategori" | null;
+export type SortKey =
+  | "status"
+  | "kanal"
+  | "kategori"
+  | "masuk"
+  | "update"
+  | null;
 export type SortDirection = "asc" | "desc" | null;
 
 export interface Query {
@@ -15,7 +21,22 @@ export interface Query {
   sortDirection: SortDirection;
 }
 
+/**
+ * Urutan awal: tanggal masuk, yang terbaru di atas.
+ *
+ * Sebelumnya sortKey null, yang berarti "pakai urutan baris sheet" — urutan
+ * itu menaik menurut nomor entri, sehingga laporan terlama justru muncul
+ * paling atas dan yang baru masuk terkubur di dasar.
+ */
 export const EMPTY_QUERY: Query = {
+  search: "",
+  status: "",
+  sortKey: "masuk",
+  sortDirection: "desc",
+};
+
+/** Urutan apa adanya dari sumber data — dipakai tombol "Hapus filter". */
+export const SOURCE_ORDER: Query = {
   search: "",
   status: "",
   sortKey: null,
@@ -41,12 +62,29 @@ function haystack(report: Report): string {
     .toLowerCase();
 }
 
+/**
+ * Nilai yang dibandingkan saat sortir.
+ *
+ * Tanggal dikembalikan sebagai DateOnly ("YYYY-MM-DD"), bukan teks tampilan
+ * "DD/MM/YYYY". Format YYYY-MM-DD urut secara leksikografis sama persis
+ * dengan urutan kronologisnya; mengurutkan "DD/MM/YYYY" sebagai teks akan
+ * mengelompokkan semua tanggal 01 lebih dulu, lintas bulan dan tahun.
+ */
 function sortValue(report: Report, key: Exclude<SortKey, null>): string {
-  const value =
-    key === "status" ? report.status
-    : key === "kanal" ? report.kanal
-    : report.kategori;
-  return value.trim().toLocaleLowerCase("id-ID");
+  switch (key) {
+    case "masuk":
+      return report.tanggalMasuk ?? "";
+    case "update":
+      // Entri tanpa tanggal update diperlakukan memakai tanggal masuknya,
+      // supaya tidak terlempar ke dasar seolah tidak pernah ada aktivitas.
+      return report.tanggalUpdate ?? report.tanggalMasuk ?? "";
+    case "status":
+      return report.status.trim().toLocaleLowerCase("id-ID");
+    case "kanal":
+      return report.kanal.trim().toLocaleLowerCase("id-ID");
+    case "kategori":
+      return report.kategori.trim().toLocaleLowerCase("id-ID");
+  }
 }
 
 export function applyQuery(reports: Report[], query: Query): Report[] {

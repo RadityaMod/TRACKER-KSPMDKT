@@ -340,3 +340,63 @@ describe("computeInsights", () => {
     });
   });
 });
+
+describe("sortir tanggal", () => {
+  const data = [
+    make({ no: 1, tanggalMasuk: "2026-06-01", tanggalUpdate: "2026-07-14" }),
+    make({ no: 2, tanggalMasuk: "2026-06-25", tanggalUpdate: "2026-06-25" }),
+    make({ no: 3, tanggalMasuk: "2026-05-23", tanggalUpdate: "2026-08-01" }),
+  ];
+
+  it("default: tanggal masuk terbaru di atas", () => {
+    // Default lama memakai urutan baris sheet, yang menaik menurut nomor
+    // entri — laporan terlama justru nangkring di puncak.
+    expect(applyQuery(data, EMPTY_QUERY).map((r) => r.no)).toEqual([2, 1, 3]);
+  });
+
+  it("sortir tanggal masuk, terlama dulu", () => {
+    const q: Query = { ...EMPTY_QUERY, sortKey: "masuk", sortDirection: "asc" };
+    expect(applyQuery(data, q).map((r) => r.no)).toEqual([3, 1, 2]);
+  });
+
+  it("sortir tanggal masuk, terbaru dulu", () => {
+    const q: Query = { ...EMPTY_QUERY, sortKey: "masuk", sortDirection: "desc" };
+    expect(applyQuery(data, q).map((r) => r.no)).toEqual([2, 1, 3]);
+  });
+
+  it("urut kronologis, bukan menurut teks DD/MM/YYYY", () => {
+    // Kalau diurut sebagai teks tampilan, "01/12/2026" akan dianggap lebih
+    // kecil dari "02/01/2026" karena harinya dibandingkan lebih dulu.
+    const d = [
+      make({ no: 1, tanggalMasuk: "2026-12-01" }),
+      make({ no: 2, tanggalMasuk: "2026-01-02" }),
+      make({ no: 3, tanggalMasuk: "2027-01-01" }),
+    ];
+    const q: Query = { ...EMPTY_QUERY, sortKey: "masuk", sortDirection: "asc" };
+    expect(applyQuery(d, q).map((r) => r.no)).toEqual([2, 1, 3]);
+  });
+
+  it("sortir update tetap tersedia dan memakai tanggal masuk bila update kosong", () => {
+    const d = [
+      make({ no: 1, tanggalMasuk: "2026-07-20", tanggalUpdate: null }),
+      make({ no: 2, tanggalMasuk: "2026-06-01", tanggalUpdate: "2026-06-05" }),
+    ];
+    const q: Query = { ...EMPTY_QUERY, sortKey: "update", sortDirection: "desc" };
+    expect(applyQuery(d, q).map((r) => r.no)).toEqual([1, 2]);
+  });
+
+  it("tanggal kosong sama sekali tetap di bawah", () => {
+    const d = [
+      make({ no: 1, tanggalMasuk: null, tanggalUpdate: null }),
+      make({ no: 2, tanggalMasuk: "2026-06-01", tanggalUpdate: "2026-06-01" }),
+    ];
+    expect(applyQuery(d, EMPTY_QUERY).map((r) => r.no)).toEqual([2, 1]);
+  });
+
+  it("nomor urut tampilan mengikuti hasil sortir, bukan nomor entri", () => {
+    // Kolom No di tabel dihitung dari posisi baris, jadi selalu 1..N
+    // walau nomor entri aslinya melompat-lompat setelah diurutkan.
+    const urut = applyQuery(data, EMPTY_QUERY).map((_, i) => i + 1);
+    expect(urut).toEqual([1, 2, 3]);
+  });
+});

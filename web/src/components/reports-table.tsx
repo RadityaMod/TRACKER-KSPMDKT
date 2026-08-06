@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { formatShort } from "@/lib/data/date";
+import { formatLong } from "@/lib/data/date";
 import type { Report } from "@/lib/data/schema";
 import {
   applyQuery,
+  EMPTY_QUERY,
   nextSort,
   uniqueStatuses,
   type Query,
@@ -15,12 +16,6 @@ import {
 import { ChannelBadge } from "./channel-badge";
 import { ReportDetailDialog } from "./report-detail-dialog";
 import { StatusBadge } from "./status-badge";
-
-const SORTABLE = [
-  { key: "status", label: "Status" },
-  { key: "kanal", label: "Kanal" },
-  { key: "kategori", label: "Kategori" },
-] as const;
 
 function ariaSort(active: boolean, direction: SortDirection) {
   if (!active || !direction) return "none" as const;
@@ -63,12 +58,18 @@ function SortButton({
 export function ReportsTable({ reports }: { reports: Report[] }) {
   const params = useSearchParams();
 
-  const [query, setQuery] = useState<Query>(() => ({
-    search: params.get("q") ?? "",
-    status: params.get("status") ?? "",
-    sortKey: (params.get("sort") as SortKey) ?? null,
-    sortDirection: (params.get("dir") as SortDirection) ?? null,
-  }));
+  const [query, setQuery] = useState<Query>(() => {
+    const sort = params.get("sort") as SortKey;
+    const dir = params.get("dir") as SortDirection;
+    return {
+      search: params.get("q") ?? "",
+      status: params.get("status") ?? "",
+      // URL menang bila memuat sortir; kalau tidak, pakai default
+      // (pembaruan terbaru dulu), bukan urutan mentah sheet.
+      sortKey: sort ?? EMPTY_QUERY.sortKey,
+      sortDirection: sort ? dir : EMPTY_QUERY.sortDirection,
+    };
+  });
 
   const [selected, setSelected] = useState<Report | null>(null);
 
@@ -92,8 +93,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
   const setSort = (key: Exclude<SortKey, null>) =>
     setQuery((current) => ({ ...current, ...nextSort(current, key) }));
 
-  const reset = () =>
-    setQuery({ search: "", status: "", sortKey: null, sortDirection: null });
+  const reset = () => setQuery(EMPTY_QUERY);
 
   return (
     <section
@@ -164,11 +164,23 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
           </caption>
           <thead>
             <tr className="bg-cute-silver text-left text-[11px] tracking-wide text-ink-muted uppercase">
+              {/* Nomor urut tampilan, bukan nomor entri di sheet. Karena
+                  daftar diurutkan, nomor entri tidak lagi berurutan dan
+                  sulit dipakai menghitung posisi. */}
               <th scope="col" className="px-3 py-2 font-bold">
                 No
               </th>
-              <th scope="col" className="hidden px-3 py-2 font-bold md:table-cell">
-                Update
+              <th
+                scope="col"
+                className="px-3 py-2"
+                aria-sort={ariaSort(query.sortKey === "masuk", query.sortDirection)}
+              >
+                <SortButton
+                  label="Tanggal Masuk"
+                  active={query.sortKey === "masuk"}
+                  direction={query.sortDirection}
+                  onClick={() => setSort("masuk")}
+                />
               </th>
               <th
                 scope="col"
@@ -222,7 +234,9 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
           </thead>
 
           <tbody>
-            {visible.map((report) => (
+            {visible.map((report, index) => {
+              const urut = index + 1;
+              return (
               <tr
                 key={report.no}
                 // Klik baris hanya kemudahan mouse — sengaja TANPA tabindex.
@@ -233,10 +247,12 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                 // solid saat baris di bawahnya lewat di belakangnya.
                 className="cursor-pointer border-t border-slient-grey bg-white hover:bg-sky-50/60"
               >
-                <td className="px-3 py-2.5 align-top tabular-nums">{report.no}</td>
+                <td className="px-3 py-2.5 align-top tabular-nums text-ink-muted">
+                  {urut}
+                </td>
 
-                <td className="hidden px-3 py-2.5 align-top whitespace-nowrap tabular-nums md:table-cell">
-                  {report.tanggalUpdate ? formatShort(report.tanggalUpdate) : "—"}
+                <td className="px-3 py-2.5 align-top whitespace-nowrap tabular-nums">
+                  {report.tanggalMasuk ? formatLong(report.tanggalMasuk) : "—"}
                 </td>
 
                 <td className="px-3 py-2.5 align-top">
@@ -288,7 +304,8 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
