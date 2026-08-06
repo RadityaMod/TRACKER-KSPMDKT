@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getReports, SchemaError } from "@/lib/data/reports";
-import { computeMetrics } from "@/lib/data/metrics";
+import { computeInsights, computeMetrics } from "@/lib/data/metrics";
 import { computeTraffic } from "@/lib/data/traffic";
 import { MetricsRow } from "@/components/metrics-row";
 import { TrafficChart } from "@/components/traffic-chart";
@@ -52,6 +52,7 @@ export default async function Page() {
 
   const { reports, label, skipped, unmappedColumns, fallbackReason } = data;
   const metrics = computeMetrics(reports);
+  const insights = computeInsights(reports);
   const traffic = computeTraffic(reports);
 
   return (
@@ -91,7 +92,7 @@ export default async function Page() {
         </p>
       )}
 
-      <MetricsRow metrics={metrics} />
+      <MetricsRow metrics={metrics} insights={insights} />
 
       <section
         aria-label="Traffic laporan harian"

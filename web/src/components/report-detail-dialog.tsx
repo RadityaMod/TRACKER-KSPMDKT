@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { formatLong } from "@/lib/data/date";
 import type { Report } from "@/lib/data/schema";
+import { ChannelBadge } from "./channel-badge";
 import { StatusBadge } from "./status-badge";
 
 interface Field {
@@ -10,6 +11,8 @@ interface Field {
   value: string;
   wide?: boolean;
   prose?: boolean;
+  /** Ganti teks polos dengan elemen sendiri, mis. badge kanal. */
+  render?: React.ReactNode;
 }
 
 function FieldList({ fields }: { fields: Field[] }) {
@@ -25,7 +28,7 @@ function FieldList({ fields }: { fields: Field[] }) {
                 : "text-sm font-semibold break-words"
             }
           >
-            {field.value || "—"}
+            {field.render ?? (field.value || "—")}
           </dd>
         </div>
       ))}
@@ -112,7 +115,11 @@ export function ReportDetailDialog({
               </h3>
               <FieldList
                 fields={[
-                  { label: "Kanal", value: report.kanal },
+                  {
+                    label: "Kanal",
+                    value: report.kanal,
+                    render: <ChannelBadge channel={report.kanal} />,
+                  },
                   { label: "Status pelapor", value: report.statusPelapor },
                   { label: "Kontak WA / ID Chat", value: report.kontakWa },
                   { label: "Nomor telepon", value: report.noTelpon },

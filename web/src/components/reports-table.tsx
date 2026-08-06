@@ -12,6 +12,7 @@ import {
   type SortDirection,
   type SortKey,
 } from "@/lib/data/filter";
+import { ChannelBadge } from "./channel-badge";
 import { ReportDetailDialog } from "./report-detail-dialog";
 import { StatusBadge } from "./status-badge";
 
@@ -257,15 +258,16 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                   <span className="mt-0.5 block text-xs text-ink-muted">
                     {report.alamat || "Lokasi tidak tercatat"}
                   </span>
-                  <span className="mt-1 block text-xs text-ink-muted lg:hidden">
-                    {report.kanal} · {report.kategori}
+                  {/* Di bawah lg kolom Kanal disembunyikan, jadi badge-nya
+                      ikut turun ke sini supaya warna kanal tetap terbaca. */}
+                  <span className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-ink-muted lg:hidden">
+                    <ChannelBadge channel={report.kanal} />
+                    <span>{report.kategori}</span>
                   </span>
                 </td>
 
                 <td className="hidden px-3 py-2.5 align-top lg:table-cell">
-                  <span className="rounded-md bg-sky-50 px-2 py-1 text-xs font-semibold text-endless-sky">
-                    {report.kanal || "—"}
-                  </span>
+                  <ChannelBadge channel={report.kanal} />
                 </td>
 
                 <td className="hidden px-3 py-2.5 align-top lg:table-cell">

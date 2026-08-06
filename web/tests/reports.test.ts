@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { parseCsv } from "@/lib/data/csv";
 import { parseReports } from "@/lib/data/schema";
-import { computeMetrics, isNew, isResolved } from "@/lib/data/metrics";
+import { computeInsights, computeMetrics, isNew, isResolved } from "@/lib/data/metrics";
 import { computeTraffic } from "@/lib/data/traffic";
 import {
   applyQuery,
@@ -282,5 +282,61 @@ describe("nextSort", () => {
 describe.skipIf(!HAS_REAL_DATA)("uniqueStatuses", () => {
   it("mengembalikan nilai unik terurut", () => {
     expect(uniqueStatuses(loadRealData())).toEqual(["Baru"]);
+  });
+});
+
+describe("computeInsights", () => {
+  it("menghitung sebaran kanal, terbanyak dulu", () => {
+    const data = [
+      make({ kanal: "OCA" }),
+      make({ kanal: "OCA" }),
+      make({ kanal: "WhatsApp" }),
+    ];
+    expect(computeInsights(data).kanal).toEqual([
+      { label: "OCA", count: 2 },
+      { label: "WhatsApp", count: 1 },
+    ]);
+  });
+
+  it("mengabaikan kanal kosong alih-alih menghitungnya sebagai kategori", () => {
+    const data = [make({ kanal: "OCA" }), make({ kanal: "" }), make({ kanal: "  " })];
+    expect(computeInsights(data).kanal).toEqual([{ label: "OCA", count: 1 }]);
+  });
+
+  it("memilih kategori terbanyak", () => {
+    const data = [
+      make({ kategori: "Hukum" }),
+      make({ kategori: "SPMB" }),
+      make({ kategori: "SPMB" }),
+    ];
+    expect(computeInsights(data).kategoriTeratas).toEqual({ label: "SPMB", count: 2 });
+  });
+
+  it("menghitung entri yang perlu verifikasi", () => {
+    const data = [
+      make({ perluVerifikasi: true }),
+      make({ perluVerifikasi: true }),
+      make({ perluVerifikasi: false }),
+    ];
+    expect(computeInsights(data).perluVerifikasi).toBe(2);
+  });
+
+  it("ragamStatus membedakan data satu-status dari data beragam", () => {
+    // Inilah yang menentukan apakah KPI status ditampilkan: selama hanya ada
+    // satu status, tiga tile-nya akan permanen nol dan lebih baik diganti.
+    expect(computeInsights([make({ status: "Baru" }), make({ status: "Baru" })]).ragamStatus).toBe(1);
+    expect(
+      computeInsights([make({ status: "Baru" }), make({ status: "Selesai" })]).ragamStatus,
+    ).toBe(2);
+  });
+
+  it("aman untuk dataset kosong", () => {
+    expect(computeInsights([])).toEqual({
+      total: 0,
+      kanal: [],
+      kategoriTeratas: null,
+      perluVerifikasi: 0,
+      ragamStatus: 0,
+    });
   });
 });
