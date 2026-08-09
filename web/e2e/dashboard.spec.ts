@@ -41,7 +41,11 @@ test("wrong PIN shows a useful error", async ({ page }) => {
 
 test("valid PIN opens the dashboard and logout locks it again", async ({ page }) => {
   await unlock(page);
-  await expect(page.getByText(/CSV lokal .* 2 entri/)).toBeVisible();
+  // Header tak lagi menampilkan label sumber data, jadi bukti bahwa CSV
+  // fallback benar-benar termuat diambil dari caption tabel.
+  await expect(
+    page.getByRole("table", { name: "Daftar pelapor KSP Mendekat, 2 dari 2 entri" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Kunci dashboard di perangkat ini" }).click();
   await expectPath(page, "/pin");
 });
