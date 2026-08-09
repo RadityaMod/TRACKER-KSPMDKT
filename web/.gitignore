@@ -22,3 +22,10 @@ coverage/
 
 # Google service-account local key — jangan commit
 gen-lang-client-*.json
+
+# Claude Code — setelan mesin lokal
+.claude/settings.local.json
+
+# Playwright
+test-results/
+playwright-report/

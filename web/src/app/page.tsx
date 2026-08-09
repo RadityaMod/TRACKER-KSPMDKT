@@ -32,7 +32,7 @@ export default async function Page() {
   } catch (error) {
     if (error instanceof SchemaError) {
       return (
-        <Shell source="gagal dimuat">
+        <Shell>
           <ErrorPanel
             title="Struktur data tidak dikenali"
             detail={error.message}
@@ -41,7 +41,7 @@ export default async function Page() {
       );
     }
     return (
-      <Shell source="gagal dimuat">
+      <Shell>
         <ErrorPanel
           title="Data tidak bisa dibaca"
           detail={error instanceof Error ? error.message : String(error)}
@@ -50,13 +50,13 @@ export default async function Page() {
     );
   }
 
-  const { reports, label, skipped, unmappedColumns, fallbackReason } = data;
+  const { reports, skipped, unmappedColumns, fallbackReason } = data;
   const metrics = computeMetrics(reports);
   const insights = computeInsights(reports);
   const traffic = computeTraffic(reports);
 
   return (
-    <Shell source={`${label} · ${reports.length} entri`}>
+    <Shell>
       {fallbackReason && (
         <div
           role="alert"
@@ -125,33 +125,27 @@ function TableSkeleton() {
   );
 }
 
-function Shell({
-  source,
-  children,
-}: {
-  source: string;
-  children: React.ReactNode;
-}) {
+function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <header className="flex h-13 items-center justify-between gap-4 border-b border-slient-grey bg-white px-4 py-2 sm:px-8">
-        <div className="min-w-0">
-          <strong className="block text-sm font-extrabold tracking-wider text-regal-blue">
+      <header className="text-ink">
+        <div className="mx-auto flex min-h-13 w-full max-w-[1440px] items-center justify-between gap-3 px-3 sm:px-6">
+          <strong className="block truncate text-sm font-black tracking-[-0.02em] text-regal-blue sm:text-[15px]">
             KSP MENDEKAT TRACKER
           </strong>
-          <span className="block truncate text-[10px] text-ink-muted">{source}</span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <RefreshButton />
-          <form action="/api/pin/logout" method="post">
-            <button
-              type="submit"
-              className="min-h-11 rounded-lg border border-slient-grey bg-white px-3 text-xs font-extrabold text-ink-muted transition hover:border-regal-blue hover:text-regal-blue"
-              aria-label="Kunci dashboard di perangkat ini"
-            >
-              Kunci
-            </button>
-          </form>
+
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <RefreshButton />
+            <form action="/api/pin/logout" method="post" className="flex">
+              <button
+                type="submit"
+                className="min-h-11 bg-cute-silver px-3 text-[11px] font-extrabold tracking-wide text-regal-blue transition hover:bg-smooth-white sm:px-4"
+                aria-label="Kunci dashboard di perangkat ini"
+              >
+                Kunci
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 

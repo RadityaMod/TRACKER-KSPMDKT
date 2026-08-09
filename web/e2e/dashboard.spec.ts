@@ -11,7 +11,7 @@ async function unlock(page: Page) {
   await page.goto("/");
   await expectPath(page, "/pin");
   await page.getByLabel("PIN dashboard").fill(TEST_PIN);
-  await page.getByRole("button", { name: "Buka Dashboard" }).click();
+  await page.getByLabel("PIN dashboard").press("Enter");
   await expectPath(page, "/");
   await expect(
     page.getByRole("strong").filter({ hasText: "KSP MENDEKAT TRACKER" }),
@@ -29,13 +29,13 @@ test("anonymous visitors are redirected to the PIN gate", async ({ page }) => {
   await page.goto("/?q=banjir");
   await expectPath(page, "/pin");
   expect(new URL(page.url()).searchParams.get("redirectTo")).toBe("/?q=banjir");
-  await expect(page.getByRole("heading", { name: "KSP Mendekat Tracker" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "KSP MENDEKAT" })).toBeVisible();
 });
 
 test("wrong PIN shows a useful error", async ({ page }) => {
   await page.goto("/pin");
   await page.getByLabel("PIN dashboard").fill("00000000");
-  await page.getByRole("button", { name: "Buka Dashboard" }).click();
+  await page.getByLabel("PIN dashboard").press("Enter");
   await expect(page.getByText("PIN belum cocok. Coba masukkan ulang.")).toBeVisible();
 });
 
@@ -51,7 +51,7 @@ test("PIN, dashboard, and detail dialog pass axe checks", async ({ page }) => {
   await expectNoAxeViolations(page);
 
   await page.getByLabel("PIN dashboard").fill(TEST_PIN);
-  await page.getByRole("button", { name: "Buka Dashboard" }).click();
+  await page.getByLabel("PIN dashboard").press("Enter");
   await expectPath(page, "/");
   await expectNoAxeViolations(page);
 
