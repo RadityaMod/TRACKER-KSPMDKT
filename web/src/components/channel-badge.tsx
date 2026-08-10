@@ -19,7 +19,7 @@ export function channelTone(value: string): ChannelTone {
 const TONE_CLASS: Record<ChannelTone, string> = {
   whatsapp: "bg-emerald-50 text-emerald-800",
   oca: "bg-rose-50 text-rose-800",
-  netral: "bg-white-sand text-ink-muted",
+  netral: "bg-surface-sunken text-ink-muted",
 };
 
 export function ChannelBadge({

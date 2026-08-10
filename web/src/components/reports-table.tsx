@@ -46,7 +46,7 @@ function SortButton({
         className={`grid h-5 w-5 place-items-center rounded-full border text-[13px] leading-none ${
           active
             ? "border-royal-light-blue bg-sky-50 text-smothe-blue"
-            : "border-slient-grey text-ink-muted"
+            : "border-line text-ink-muted"
         }`}
       >
         {arrow}
@@ -98,9 +98,9 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
   return (
     <section
       aria-label="Daftar pelapor"
-      className="overflow-hidden rounded-xl border border-slient-grey bg-white"
+      className="overflow-hidden rounded-xl border border-line bg-surface shadow-card"
     >
-      <div className="grid gap-2 border-b border-slient-grey p-3 sm:grid-cols-[minmax(0,1fr)_200px_auto]">
+      <div className="grid gap-2 border-b border-line p-3 sm:grid-cols-[minmax(0,1fr)_200px_auto]">
         <div>
           <label htmlFor="search" className="sr-only">
             Cari pelapor atau aspirasi
@@ -113,7 +113,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
               setQuery((current) => ({ ...current, search: event.target.value }))
             }
             placeholder="Ketik nama, lokasi, atau kata kunci"
-            className="h-11 w-full rounded-lg border border-slient-grey px-3 outline-none focus:border-smothe-blue"
+            className="h-11 w-full rounded-lg border border-line px-3 outline-none focus:border-smothe-blue"
           />
         </div>
 
@@ -128,7 +128,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
               setQuery((current) => ({ ...current, status: event.target.value }))
             }
             disabled={statuses.length < 2}
-            className="h-11 w-full rounded-lg border border-slient-grey px-3 outline-none focus:border-smothe-blue disabled:bg-white-sand disabled:text-ink-muted"
+            className="h-11 w-full rounded-lg border border-line px-3 outline-none focus:border-smothe-blue disabled:bg-surface-sunken disabled:text-ink-muted"
           >
             <option value="">Semua status</option>
             {statuses.map((status) => (
@@ -142,14 +142,14 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
         <button
           type="button"
           onClick={reset}
-          className="h-11 rounded-lg border border-slient-grey px-4 text-sm font-bold hover:bg-white-sand"
+          className="h-11 rounded-lg border border-line px-4 text-sm font-bold hover:bg-surface-sunken"
         >
           Hapus filter
         </button>
       </div>
 
       {statuses.length < 2 && (
-        <p className="border-b border-slient-grey bg-sky-50 px-3 py-2 text-xs text-endless-sky">
+        <p className="border-b border-line bg-sky-50 px-3 py-2 text-xs text-endless-sky">
           Seluruh {reports.length} entri berstatus{" "}
           <strong>{statuses[0] ?? "kosong"}</strong>, jadi filter status belum ada
           gunanya. Tile Proses dan Selesai akan tetap nol sampai status di sumber
@@ -163,7 +163,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
             Daftar pelapor KSP Mendekat, {visible.length} dari {reports.length} entri
           </caption>
           <thead>
-            <tr className="bg-cute-silver text-left text-[11px] tracking-wide text-ink-muted uppercase">
+            <tr className="bg-surface-sunken text-left text-[11px] tracking-wide text-ink-muted uppercase">
               {/* Nomor urut tampilan, bukan nomor entri di sheet. Karena
                   daftar diurutkan, nomor entri tidak lagi berurutan dan
                   sulit dipakai menghitung posisi. */}
@@ -226,7 +226,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                   layar sehingga baris tidak bisa dibuka lewat keyboard. */}
               <th
                 scope="col"
-                className="sticky right-0 bg-cute-silver px-3 py-2 font-bold"
+                className="sticky right-0 bg-surface-sunken px-3 py-2 font-bold"
               >
                 <span className="sr-only">Detail</span>
               </th>
@@ -241,9 +241,9 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                 // Kontrol sungguhan adalah tombol Detail di kolom terakhir,
                 // supaya tidak ada dua tab stop untuk satu aksi.
                 onClick={() => setSelected(report)}
-                // bg-white eksplisit supaya sel Detail yang sticky punya latar
+                // bg-surface eksplisit supaya sel Detail yang sticky punya latar
                 // solid saat baris di bawahnya lewat di belakangnya.
-                className="cursor-pointer border-t border-slient-grey bg-white hover:bg-sky-50/60"
+                className="cursor-pointer border-t border-line bg-surface hover:bg-sky-50/60"
               >
                 {/* Nomor entri dari sheet, BUKAN posisi baris. Karena daftar
                     diurutkan menurut tanggal, angkanya melompat-lompat — dan
@@ -299,7 +299,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
                       event.stopPropagation();
                       setSelected(report);
                     }}
-                    className="min-h-11 rounded-lg border border-slient-grey bg-white px-3 text-xs font-bold text-regal-blue hover:bg-white-sand"
+                    className="min-h-11 rounded-lg border border-line bg-surface px-3 text-xs font-bold text-regal-blue hover:bg-surface-sunken"
                   >
                     Detail
                     <span className="sr-only"> {report.namaPelapor}</span>

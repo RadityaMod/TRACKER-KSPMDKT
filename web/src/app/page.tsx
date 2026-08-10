@@ -98,13 +98,13 @@ export default async function Page() {
         aria-label="Traffic laporan harian"
         // Tanpa padding: grafik mengisi lebar penuh kartu. Padding diatur
         // per bagian di dalam TrafficChart supaya hanya teksnya yang menjorok.
-        className="overflow-hidden rounded-xl border border-slient-grey bg-white"
+        className="overflow-hidden rounded-xl border border-line bg-surface shadow-card"
       >
         <TrafficChart traffic={traffic} />
       </section>
 
       {reports.length === 0 ? (
-        <div className="rounded-xl border border-slient-grey bg-white px-4 py-12 text-center">
+        <div className="rounded-xl border border-line bg-surface px-4 py-12 text-center">
           <strong className="block">Belum ada data</strong>
           <span className="mt-1 block text-xs text-ink-muted">
             Sumber data terbaca, tetapi tidak berisi satu entri pun.
@@ -121,7 +121,7 @@ export default async function Page() {
 
 function TableSkeleton() {
   return (
-    <div className="h-64 animate-pulse rounded-xl border border-slient-grey bg-white" />
+    <div className="h-64 animate-pulse rounded-xl border border-line bg-surface" />
   );
 }
 
@@ -139,7 +139,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <form action="/api/pin/logout" method="post" className="flex">
               <button
                 type="submit"
-                className="min-h-11 bg-cute-silver px-3 text-[11px] font-extrabold tracking-wide text-regal-blue transition hover:bg-smooth-white sm:px-4"
+                className="min-h-11 bg-surface-sunken px-3 text-[11px] font-extrabold tracking-wide text-regal-blue transition hover:bg-line sm:px-4"
                 aria-label="Kunci dashboard di perangkat ini"
               >
                 Kunci

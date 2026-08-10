@@ -12,7 +12,7 @@ function tone(status: string): string {
   if (isResolved(value)) return "bg-emerald-50 text-emerald-800";
   if (isNew(value)) return "bg-sky-50 text-endless-sky";
   if (value.includes("menunggu")) return "bg-orange-50 text-orange-800";
-  if (!value) return "bg-white-sand text-ink-muted";
+  if (!value) return "bg-surface-sunken text-ink-muted";
   return "bg-amber-50 text-amber-900";
 }
 

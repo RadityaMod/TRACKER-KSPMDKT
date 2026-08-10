@@ -23,7 +23,7 @@ function Tile({
   accent?: string;
 }) {
   return (
-    <div className="min-w-0 border-slient-grey px-4 py-3 not-first:border-l">
+    <div className="min-w-0 border-line px-4 py-3 not-first:border-l">
       <dt className="text-[11px] font-bold tracking-wide text-ink-muted uppercase">
         {label}
       </dt>
@@ -57,7 +57,7 @@ export function MetricsRow({
 
   return (
     <section aria-label="Ringkasan pelapor">
-      <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-slient-grey bg-white sm:grid-cols-4">
+      <dl className="grid grid-cols-2 overflow-hidden rounded-xl border border-line bg-surface shadow-card sm:grid-cols-4">
         <Tile label="Total laporan" value={insights.total} />
 
         {statusBermakna ? (

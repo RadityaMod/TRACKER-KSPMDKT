@@ -142,10 +142,10 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
         <summary className="inline-flex min-h-11 cursor-pointer items-center text-xs text-ink-muted">
           Lihat data grafik sebagai tabel
         </summary>
-        <div className="mt-2 max-h-56 overflow-auto rounded-lg border border-slient-grey">
+        <div className="mt-2 max-h-56 overflow-auto rounded-lg border border-line">
           <table className="w-full text-xs">
             <caption className="sr-only">Jumlah laporan masuk per hari</caption>
-            <thead className="sticky top-0 bg-cute-silver text-ink-muted">
+            <thead className="sticky top-0 bg-surface-sunken text-ink-muted">
               <tr>
                 <th scope="col" className="px-3 py-1.5 text-left font-semibold">
                   Tanggal
@@ -159,7 +159,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
               {points
                 .filter((point) => point.count > 0)
                 .map((point) => (
-                  <tr key={point.date} className="border-t border-slient-grey">
+                  <tr key={point.date} className="border-t border-line">
                     <td className="px-3 py-1.5">{formatLong(point.date)}</td>
                     <td className="px-3 py-1.5 text-right tabular-nums">
                       {point.count}

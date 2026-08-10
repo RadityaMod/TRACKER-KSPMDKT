@@ -25,17 +25,44 @@
   --color-ink-muted: #5c6470;
 
   /*
+    Tangga netral halaman — sengaja TIDAK memakai white-sand & slient-grey.
+
+    Diukur dalam OKLCH, dua warna itu melenceng jauh dari biru merek:
+    white-sand di hue 81 (kuning-zaitun) dan slient-grey di hue 113 (hijau),
+    sementara regal-blue ada di hue 250. Keduanya menutupi area paling luas
+    di dashboard — latar halaman dan seluruh garis — jadi bidang hangat itu
+    beradu dengan kartu putih murni dan hasilnya terbaca kusam seperti
+    kertas menguning. Tangga di bawah memakai hue yang sama dengan merek
+    dengan chroma sangat rendah, sehingga netral tetapi sebidang.
+
+    Tidak ada #fff di sini: putih murni membuat kartu tampak terpotong dari
+    halaman, bukan mengambang di atasnya.
+  */
+  --color-canvas: oklch(95.9% 0.008 250);
+  --color-surface: oklch(99.4% 0.0015 250);
+  --color-surface-sunken: oklch(94.6% 0.014 250);
+  --color-line: oklch(90.5% 0.012 250);
+
+  /*
     Token semantik yang dibutuhkan komponen shadcn/ui (chart, card).
-    Dipetakan ke palet di atas, bukan warna default shadcn, supaya grafik
+    Dipetakan ke tangga di atas, bukan warna default shadcn, supaya grafik
     menyatu dengan sisa dashboard.
   */
-  --color-background: #ffffff;
+  --color-background: var(--color-surface);
   --color-foreground: #333338;
-  --color-muted: #edeae5;
+  --color-muted: var(--color-surface-sunken);
   --color-muted-foreground: #5c6470;
-  --color-border: #d2d3cc;
-  --color-card: #ffffff;
+  --color-border: var(--color-line);
+  --color-card: var(--color-surface);
   --color-card-foreground: #333338;
+
+  /*
+    Bayangan kartu: dua lapis, dinaikkan dari biru merek dan bukan hitam
+    netral. Bayangan hitam di atas bidang bernada biru terbaca abu kotor.
+  */
+  --shadow-card:
+    0 1px 2px oklch(32.3% 0.0877 249.7 / 0.05),
+    0 10px 24px -14px oklch(32.3% 0.0877 249.7 / 0.22);
 }
 
 /*
@@ -57,7 +84,7 @@
 
 @layer base {
   html {
-    background: var(--color-white-sand);
+    background: var(--color-canvas);
   }
 
   body {
