@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import { Suspense } from "react";
 import { getReports, SchemaError } from "@/lib/data/reports";
 import { computeInsights, computeMetrics } from "@/lib/data/metrics";
@@ -134,14 +135,20 @@ function Shell({ children }: { children: React.ReactNode }) {
             KSP MENDEKAT TRACKER
           </strong>
 
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          {/*
+            Satu kelompok bergaris, bukan dua tombol lepas. Keduanya aksi
+            utilitas: tak satu pun pantas berbobot seperti tombol primer,
+            karena isi utama halaman ini adalah tabelnya.
+          */}
+          <div className="flex shrink-0 items-center divide-x divide-line overflow-hidden rounded-lg border border-line bg-surface">
             <RefreshButton />
             <form action="/api/pin/logout" method="post" className="flex">
               <button
                 type="submit"
-                className="min-h-11 bg-surface-sunken px-3 text-[11px] font-extrabold tracking-wide text-regal-blue transition hover:bg-line sm:px-4"
+                className="inline-flex min-h-11 items-center gap-2 px-3 text-xs font-bold text-ink-muted transition hover:bg-surface-sunken hover:text-regal-blue sm:px-4"
                 aria-label="Kunci dashboard di perangkat ini"
               >
+                <Lock aria-hidden="true" className="size-4 shrink-0" />
                 Kunci
               </button>
             </form>

@@ -2,23 +2,30 @@
  * Badge kanal masuknya laporan.
  *
  * Warna dipakai sebagai penanda cepat saat memindai tabel: WhatsApp hijau,
- * OCA merah. Kanal lain jatuh ke netral alih-alih dipaksa masuk salah satu
- * warna — kalau nanti muncul kanal baru di sheet, ia tampil apa adanya, bukan
- * menyaru jadi kanal yang salah.
+ * OCA merah, Surat kuning. Kanal lain jatuh ke netral alih-alih dipaksa masuk
+ * salah satu warna — kalau nanti muncul kanal baru di sheet, ia tampil apa
+ * adanya, bukan menyaru jadi kanal yang salah.
  */
 
-export type ChannelTone = "whatsapp" | "oca" | "netral";
+export type ChannelTone = "whatsapp" | "oca" | "surat" | "netral";
 
 export function channelTone(value: string): ChannelTone {
   const normalized = value.trim().toLowerCase();
   if (normalized === "whatsapp" || normalized === "wa") return "whatsapp";
   if (normalized === "oca") return "oca";
+  if (normalized === "surat") return "surat";
   return "netral";
 }
 
 const TONE_CLASS: Record<ChannelTone, string> = {
   whatsapp: "bg-emerald-50 text-emerald-800",
   oca: "bg-rose-50 text-rose-800",
+  /*
+    Kuning dipakai pada nada gelap (amber-800), bukan kuning murni: kuning
+    terang di atas latar terang tidak lolos rasio kontras teks kecil. Nada
+    ini juga sudah dipakai status-badge, jadi bahasa warnanya tetap satu.
+  */
+  surat: "bg-amber-50 text-amber-800",
   netral: "bg-surface-sunken text-ink-muted",
 };
 

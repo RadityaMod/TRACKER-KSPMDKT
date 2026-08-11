@@ -8,7 +8,7 @@ import { channelTone } from "./channel-badge";
  * benar-benar memakai lebih dari satu status. Selama seluruh entri masih
  * "Baru", tiga dari empat tile-nya permanen nol dan hanya memakan ruang paling
  * berharga di halaman — jadi ruang itu diberikan ke angka yang bergerak:
- * sebaran kanal, kategori terbanyak, dan entri yang perlu diverifikasi.
+ * sebaran kanal dan entri yang perlu diverifikasi.
  */
 
 function Tile({
@@ -99,16 +99,6 @@ export function MetricsRow({
           </>
         )}
       </dl>
-
-      {insights.kategoriTeratas && (
-        <p className="mt-2 text-[11px] text-ink-muted">
-          Kategori terbanyak:{" "}
-          <strong className="font-semibold text-regal-blue">
-            {insights.kategoriTeratas.label}
-          </strong>{" "}
-          ({insights.kategoriTeratas.count} laporan)
-        </p>
-      )}
     </section>
   );
 }
