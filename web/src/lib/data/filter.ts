@@ -43,6 +43,23 @@ export const SOURCE_ORDER: Query = {
   sortDirection: null,
 };
 
+export const REPORTS_PER_PAGE = 20;
+
+/** Potong hasil filter ke satu halaman dan jaga nomor halaman tetap valid. */
+export function paginate<T>(items: T[], requestedPage: number) {
+  const pageCount = Math.max(1, Math.ceil(items.length / REPORTS_PER_PAGE));
+  const page = Math.min(Math.max(1, Math.trunc(requestedPage) || 1), pageCount);
+  const offset = (page - 1) * REPORTS_PER_PAGE;
+
+  return {
+    items: items.slice(offset, offset + REPORTS_PER_PAGE),
+    page,
+    pageCount,
+    first: items.length === 0 ? 0 : offset + 1,
+    last: Math.min(offset + REPORTS_PER_PAGE, items.length),
+  };
+}
+
 /** Field yang ikut dicari. Sengaja eksplisit, bukan join seluruh objek. */
 function haystack(report: Report): string {
   return [

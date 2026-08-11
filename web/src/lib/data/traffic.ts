@@ -13,6 +13,8 @@ import type { DateOnly } from "./date";
 import { dateRange } from "./date";
 import type { Report } from "./schema";
 
+const TRAFFIC_START_DATE: DateOnly = "2026-05-01";
+
 export interface TrafficPoint {
   date: DateOnly;
   count: number;
@@ -29,6 +31,7 @@ export function computeTraffic(reports: Report[]): Traffic {
 
   for (const report of reports) {
     if (!report.tanggalMasuk) continue;
+    if (report.tanggalMasuk < TRAFFIC_START_DATE) continue;
     counts.set(report.tanggalMasuk, (counts.get(report.tanggalMasuk) ?? 0) + 1);
   }
 
@@ -37,11 +40,14 @@ export function computeTraffic(reports: Report[]): Traffic {
     return { points: [], peak: null, total: 0 };
   }
 
-  // Berhenti di data terakhir — sengaja tidak diperpanjang ke hari ini.
-  const points = dateRange(dates[0], dates[dates.length - 1]).map((date) => ({
-    date,
-    count: counts.get(date) ?? 0,
-  }));
+  // Mulai 1 Mei sesuai cakupan dashboard, lalu berhenti di data terakhir —
+  // sengaja tidak diperpanjang ke hari ini.
+  const points = dateRange(TRAFFIC_START_DATE, dates[dates.length - 1]).map(
+    (date) => ({
+      date,
+      count: counts.get(date) ?? 0,
+    }),
+  );
 
   const peak = points.reduce(
     (best, point) => (point.count > best.count ? point : best),

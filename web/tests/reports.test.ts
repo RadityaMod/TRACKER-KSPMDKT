@@ -9,6 +9,8 @@ import {
   applyQuery,
   EMPTY_QUERY,
   nextSort,
+  paginate,
+  REPORTS_PER_PAGE,
   uniqueStatuses,
   type Query,
 } from "@/lib/data/filter";
@@ -139,34 +141,45 @@ describe("computeTraffic", () => {
     // Bug dashboard lama: sumbu ditarik sampai hari ini sehingga garis
     // terjun ke nol berhari-hari setelah laporan terakhir.
     const traffic = computeTraffic([
-      make({ tanggalMasuk: "2026-06-01" }),
-      make({ tanggalMasuk: "2026-06-03" }),
+      make({ tanggalMasuk: "2026-05-01" }),
+      make({ tanggalMasuk: "2026-05-03" }),
     ]);
-    expect(traffic.points.at(-1)!.date).toBe("2026-06-03");
+    expect(traffic.points.at(-1)!.date).toBe("2026-05-03");
+  });
+
+  it("memulai grafik pada 1 Mei dan mengabaikan laporan sebelumnya", () => {
+    const traffic = computeTraffic([
+      make({ tanggalMasuk: "2026-04-30" }),
+      make({ tanggalMasuk: "2026-05-03" }),
+    ]);
+
+    expect(traffic.points[0]).toEqual({ date: "2026-05-01", count: 0 });
+    expect(traffic.points.at(-1)).toEqual({ date: "2026-05-03", count: 1 });
+    expect(traffic.total).toBe(1);
   });
 
   it("tetap menggambar nol untuk hari kosong di tengah", () => {
     const traffic = computeTraffic([
-      make({ tanggalMasuk: "2026-06-01" }),
-      make({ tanggalMasuk: "2026-06-03" }),
+      make({ tanggalMasuk: "2026-05-01" }),
+      make({ tanggalMasuk: "2026-05-03" }),
     ]);
     expect(traffic.points.map((p) => p.count)).toEqual([1, 0, 1]);
   });
 
   it("menjumlahkan beberapa laporan di hari yang sama", () => {
     const traffic = computeTraffic([
-      make({ tanggalMasuk: "2026-06-01" }),
-      make({ tanggalMasuk: "2026-06-01" }),
-      make({ tanggalMasuk: "2026-06-01" }),
+      make({ tanggalMasuk: "2026-05-01" }),
+      make({ tanggalMasuk: "2026-05-01" }),
+      make({ tanggalMasuk: "2026-05-01" }),
     ]);
-    expect(traffic.points).toEqual([{ date: "2026-06-01", count: 3 }]);
-    expect(traffic.peak).toEqual({ date: "2026-06-01", count: 3 });
+    expect(traffic.points).toEqual([{ date: "2026-05-01", count: 3 }]);
+    expect(traffic.peak).toEqual({ date: "2026-05-01", count: 3 });
   });
 
   it("mengabaikan entri tanpa tanggal", () => {
     const traffic = computeTraffic([
       make({ tanggalMasuk: null }),
-      make({ tanggalMasuk: "2026-06-01" }),
+      make({ tanggalMasuk: "2026-05-01" }),
     ]);
     expect(traffic.total).toBe(1);
   });
@@ -276,6 +289,29 @@ describe("nextSort", () => {
     expect(query.sortKey).toBe("kategori");
     expect(query.sortDirection).toBe("asc");
     expect(applyQuery(data, query).map((r) => r.no)).toEqual([2, 1]);
+  });
+});
+
+describe("paginate", () => {
+  const data = Array.from({ length: 45 }, (_, index) => index + 1);
+
+  it("membatasi setiap halaman ke 20 entri", () => {
+    expect(REPORTS_PER_PAGE).toBe(20);
+    expect(paginate(data, 1).items).toEqual(data.slice(0, 20));
+    expect(paginate(data, 2).items).toEqual(data.slice(20, 40));
+    expect(paginate(data, 3).items).toEqual(data.slice(40, 45));
+  });
+
+  it("menjaga nomor halaman tetap dalam rentang", () => {
+    expect(paginate(data, 99).page).toBe(3);
+    expect(paginate(data, 0).page).toBe(1);
+    expect(paginate([], 2)).toMatchObject({
+      items: [],
+      page: 1,
+      pageCount: 1,
+      first: 0,
+      last: 0,
+    });
   });
 });
 

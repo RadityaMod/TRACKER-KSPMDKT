@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatLong } from "@/lib/data/date";
 import type { Report } from "@/lib/data/schema";
@@ -8,6 +8,7 @@ import {
   applyQuery,
   EMPTY_QUERY,
   nextSort,
+  paginate,
   uniqueStatuses,
   type Query,
   type SortDirection,
@@ -57,6 +58,7 @@ function SortButton({
 
 export function ReportsTable({ reports }: { reports: Report[] }) {
   const params = useSearchParams();
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState<Query>(() => {
     const sort = params.get("sort") as SortKey;
@@ -72,9 +74,18 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
   });
 
   const [selected, setSelected] = useState<Report | null>(null);
+  const [page, setPage] = useState(() => {
+    const value = Number(params.get("page"));
+    return Number.isInteger(value) && value > 0 ? value : 1;
+  });
+
+  const statuses = useMemo(() => uniqueStatuses(reports), [reports]);
+  const filtered = useMemo(() => applyQuery(reports, query), [reports, query]);
+  const pagination = useMemo(() => paginate(filtered, page), [filtered, page]);
 
   // Cerminkan state ke URL tanpa navigasi server, supaya tampilan bisa
-  // dibagikan tapi filter tetap instan.
+  // dibagikan tapi filter tetap instan. Nomor halaman memakai hasil yang sudah
+  // di-clamp, jadi URL tidak pernah menunjuk halaman kosong.
   useEffect(() => {
     const next = new URLSearchParams();
     if (query.search) next.set("q", query.search);
@@ -83,17 +94,32 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
       next.set("sort", query.sortKey);
       next.set("dir", query.sortDirection);
     }
+    if (pagination.page > 1) next.set("page", String(pagination.page));
     const qs = next.toString();
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
-  }, [query]);
+  }, [pagination.page, query]);
 
-  const statuses = useMemo(() => uniqueStatuses(reports), [reports]);
-  const visible = useMemo(() => applyQuery(reports, query), [reports, query]);
-
-  const setSort = (key: Exclude<SortKey, null>) =>
+  const setSort = (key: Exclude<SortKey, null>) => {
+    setPage(1);
     setQuery((current) => ({ ...current, ...nextSort(current, key) }));
+  };
 
-  const reset = () => setQuery(EMPTY_QUERY);
+  const reset = () => {
+    setPage(1);
+    setQuery(EMPTY_QUERY);
+  };
+
+  const goToPage = (nextPage: number) => {
+    setPage(nextPage);
+    requestAnimationFrame(() => {
+      tableRef.current?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      });
+    });
+  };
 
   return (
     <section
@@ -109,9 +135,10 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
             id="search"
             type="search"
             value={query.search}
-            onChange={(event) =>
+            onChange={(event) => {
+              setPage(1);
               setQuery((current) => ({ ...current, search: event.target.value }))
-            }
+            }}
             placeholder="Ketik nama, lokasi, atau kata kunci"
             className="h-11 w-full rounded-lg border border-line px-3 outline-none focus:border-smothe-blue"
           />
@@ -124,9 +151,10 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
           <select
             id="statusFilter"
             value={query.status}
-            onChange={(event) =>
+            onChange={(event) => {
+              setPage(1);
               setQuery((current) => ({ ...current, status: event.target.value }))
-            }
+            }}
             disabled={statuses.length < 2}
             className="h-11 w-full rounded-lg border border-line px-3 outline-none focus:border-smothe-blue disabled:bg-surface-sunken disabled:text-ink-muted"
           >
@@ -157,10 +185,12 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
         </p>
       )}
 
-      <div className="overflow-x-auto">
+      <div ref={tableRef} className="scroll-mt-3 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <caption className="sr-only">
-            Daftar pelapor KSP Mendekat, {visible.length} dari {reports.length} entri
+            Daftar pelapor KSP Mendekat, halaman {pagination.page} dari{" "}
+            {pagination.pageCount}, menampilkan {pagination.first} sampai{" "}
+            {pagination.last} dari {filtered.length} hasil
           </caption>
           <thead>
             <tr className="bg-surface-sunken text-left text-[11px] tracking-wide text-ink-muted uppercase">
@@ -234,7 +264,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
           </thead>
 
           <tbody>
-            {visible.map((report) => (
+            {pagination.items.map((report) => (
               <tr
                 key={report.no}
                 // Klik baris hanya kemudahan mouse — sengaja TANPA tabindex.
@@ -311,13 +341,45 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
         </table>
       </div>
 
-      {visible.length === 0 && (
+      {filtered.length === 0 && (
         <div className="px-4 py-12 text-center">
           <strong className="block">Belum ada entri yang cocok</strong>
           <span className="mx-auto mt-1 block max-w-md text-xs text-ink-muted">
             Ubah kata pencarian atau hapus filter status untuk menampilkan kembali data.
           </span>
         </div>
+      )}
+
+      {filtered.length > 0 && (
+        <nav
+          aria-label="Navigasi halaman daftar pelapor"
+          className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-3 py-2"
+        >
+          <span className="text-xs tabular-nums text-ink-muted">
+            {pagination.first}–{pagination.last} dari {filtered.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={pagination.page === 1}
+              onClick={() => goToPage(pagination.page - 1)}
+              className="min-h-11 rounded-lg border border-line px-3 text-xs font-bold text-regal-blue hover:bg-surface-sunken disabled:cursor-not-allowed disabled:text-ink-muted disabled:opacity-50"
+            >
+              Sebelumnya
+            </button>
+            <span className="min-w-16 text-center text-xs tabular-nums text-ink-muted">
+              {pagination.page}/{pagination.pageCount}
+            </span>
+            <button
+              type="button"
+              disabled={pagination.page === pagination.pageCount}
+              onClick={() => goToPage(pagination.page + 1)}
+              className="min-h-11 rounded-lg border border-line px-3 text-xs font-bold text-regal-blue hover:bg-surface-sunken disabled:cursor-not-allowed disabled:text-ink-muted disabled:opacity-50"
+            >
+              Berikutnya
+            </button>
+          </div>
+        </nav>
       )}
 
       <ReportDetailDialog report={selected} onClose={() => setSelected(null)} />
