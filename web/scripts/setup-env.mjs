@@ -60,7 +60,7 @@ writeFileSync(
   target,
   [
     `SHEET_ID=${sheetId}`,
-    `SHEET_RANGE=${sheetRange ? JSON.stringify(sheetRange) : "Sheet1!A:N"}`,
+    `SHEET_RANGE=${sheetRange ? JSON.stringify(sheetRange) : "Sheet1!A:Z"}`,
     `GOOGLE_SERVICE_ACCOUNT_JSON='${oneLine}'`,
     `ALLOW_LOCAL_FALLBACK=false`,
     "",
@@ -71,7 +71,7 @@ writeFileSync(
 console.log(`✓ .env.local ditulis.`);
 console.log(`  Service account : ${key.client_email}`);
 console.log(`  Sheet ID        : ${sheetId}`);
-console.log(`  Range           : ${sheetRange ?? "Sheet1!A:N"}`);
+console.log(`  Range           : ${sheetRange ?? "Sheet1!A:Z"}`);
 console.log("");
 console.log("Langkah berikutnya:");
 console.log(`  1. Bagikan Google Sheet ke ${key.client_email} sebagai Viewer.`);

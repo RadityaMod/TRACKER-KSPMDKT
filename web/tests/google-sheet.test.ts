@@ -37,19 +37,28 @@ describe("readGoogleSheetConfig", () => {
   it("membaca konfigurasi lengkap", () => {
     setEnv({
       SHEET_ID: "id-contoh",
-      SHEET_RANGE: "Tracker!A:N",
+      SHEET_RANGE: "Tracker!A:R",
       GOOGLE_SERVICE_ACCOUNT_JSON: serviceAccount(),
     });
 
     const config = readGoogleSheetConfig()!;
     expect(config.spreadsheetId).toBe("id-contoh");
-    expect(config.range).toBe("Tracker!A:N");
+    expect(config.range).toBe("Tracker!A:R");
     expect(config.clientEmail).toBe("tracker@contoh.iam.gserviceaccount.com");
   });
 
   it("memakai rentang default bila SHEET_RANGE tidak diisi", () => {
     setEnv({ SHEET_ID: "id-contoh", GOOGLE_SERVICE_ACCOUNT_JSON: serviceAccount() });
-    expect(readGoogleSheetConfig()!.range).toBe("Sheet1!A:N");
+    expect(readGoogleSheetConfig()!.range).toBe("Sheet1!A:Z");
+  });
+
+  it("memperlebar rentang lama A:N agar kolom baru tetap terbaca", () => {
+    setEnv({
+      SHEET_ID: "id-contoh",
+      SHEET_RANGE: "Tracker!A:N",
+      GOOGLE_SERVICE_ACCOUNT_JSON: serviceAccount(),
+    });
+    expect(readGoogleSheetConfig()!.range).toBe("Tracker!A:Z");
   });
 
   it("mempertahankan kutip tunggal untuk nama tab berspasi", () => {
@@ -59,7 +68,7 @@ describe("readGoogleSheetConfig", () => {
       GOOGLE_SERVICE_ACCOUNT_JSON: serviceAccount(),
     });
     expect(readGoogleSheetConfig()!.range).toBe(
-      "'Tracker Pelapor KSP Mendekat'!A:N",
+      "'Tracker Pelapor KSP Mendekat'!A:Z",
     );
   });
 

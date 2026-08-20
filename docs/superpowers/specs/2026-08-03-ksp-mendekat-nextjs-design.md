@@ -14,7 +14,7 @@ Aplikasi berjalan di `web/`, membaca langsung dari Google Sheets.
 |---|---|
 | Sumber data | Google Sheets, service account, **aktif** |
 | Spreadsheet | TRACKER PELAPOR KSP MENDEKAT |
-| Tab | `Tracker Pelapor KSP Mendekat` (A:N, 14 kolom) |
+| Tab | `Tracker Pelapor KSP Mendekat` (dibaca A:Z agar penambahan kolom tidak memotong data) |
 | Jumlah entri | 103 |
 | Cache | ISR 5 menit + tombol Refresh (`revalidatePath`) |
 | Grafik | shadcn/ui + Recharts, lebar penuh, sumbu tanggal |
@@ -365,7 +365,7 @@ individual dan pertimbangkan masking atau filter server-side.
 |---|---|
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | JSON service account penuh, server-side |
 | `SHEET_ID` | ID spreadsheet |
-| `SHEET_RANGE` | Tab + rentang, mis. `Sheet1!A:N` |
+| `SHEET_RANGE` | Tab + rentang, mis. `Sheet1!A:Z` |
 | `DASHBOARD_PIN` | Shared PIN internal yang kuat |
 | `DASHBOARD_PIN_SECRET` | Secret acak terpisah untuk menandatangani sesi |
 | `ALLOW_LOCAL_FALLBACK` | Opt-in CSV lokal; harus mati di production |

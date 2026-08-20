@@ -117,7 +117,11 @@ export function describeSheetError(error: unknown, clientEmail: string): string 
  */
 export function readGoogleSheetConfig(): GoogleSheetConfig | null {
   const spreadsheetId = process.env.SHEET_ID?.trim();
-  const range = process.env.SHEET_RANGE?.trim() || "Sheet1!A:N";
+  const configuredRange = process.env.SHEET_RANGE?.trim() || "Sheet1!A:Z";
+  // Deployment lama memakai A:N. Setelah kolom PIC ditambahkan, Catatan
+  // bergeser ke O dan tidak lagi ikut terbaca. Lebarkan konfigurasi lama
+  // tanpa mengubah nama tab; rentang lain yang sudah diperbarui tetap utuh.
+  const range = configuredRange.replace(/!A:N$/i, "!A:Z");
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
 
   if (!spreadsheetId || !raw) return null;

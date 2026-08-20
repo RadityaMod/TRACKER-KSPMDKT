@@ -54,7 +54,7 @@ diizinkan.
 3. Tulis `.env.local`:
 
    ```bash
-   node scripts/setup-env.mjs <path-ke-kunci.json> <SHEET_ID> "'Nama Tab'!A:N"
+   node scripts/setup-env.mjs <path-ke-kunci.json> <SHEET_ID> "'Nama Tab'!A:Z"
    ```
 
 4. Tambahkan `DASHBOARD_PIN` dan `DASHBOARD_PIN_SECRET`, kemudian restart server.
