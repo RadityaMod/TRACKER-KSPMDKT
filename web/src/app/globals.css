@@ -100,6 +100,279 @@
   }
 }
 
+@keyframes ksp-component-enter {
+  from {
+    filter: blur(3px);
+    clip-path: inset(0 0 14% 0);
+    transform: translateY(18px);
+  }
+  to {
+    filter: blur(0);
+    clip-path: inset(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes ksp-element-reveal {
+  from {
+    filter: blur(var(--motion-blur, 2px));
+    clip-path: inset(var(--motion-clip, 0 0 10% 0));
+    transform: translate3d(
+      var(--motion-x, 0),
+      var(--motion-y, 16px),
+      0
+    );
+  }
+  to {
+    filter: blur(0);
+    clip-path: inset(0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes ksp-dialog-enter {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    clip-path: inset(8% 0 0 0);
+    transform: translateY(24px) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    clip-path: inset(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ksp-dialog-content-reveal {
+  from {
+    filter: blur(2px);
+    clip-path: inset(0 0 12% 0);
+    transform: translate3d(0, var(--motion-y, 18px), 0);
+  }
+  to {
+    filter: blur(0);
+    clip-path: inset(0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes ksp-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-lock-logo,
+  .motion-lock-title,
+  .motion-lock-tagline,
+  .motion-lock-form,
+  .motion-lock-notice,
+  .motion-header-title,
+  .motion-header-actions,
+  .motion-footer-copy,
+  .motion-metric-item,
+  .motion-chart-heading,
+  .motion-chart-asset,
+  .motion-chart-summary,
+  .motion-chart-details,
+  .motion-table-toolbar,
+  .motion-table-note,
+  .motion-table-content,
+  .motion-table-empty,
+  .motion-table-pagination {
+    animation: ksp-element-reveal var(--motion-duration, 620ms)
+      cubic-bezier(0.16, 1, 0.3, 1) var(--motion-delay, 0ms) both;
+  }
+
+  .motion-lock-logo {
+    --motion-x: -28px;
+    --motion-y: 18px;
+    --motion-clip: 12% 0 0 0;
+    --motion-blur: 5px;
+    --motion-duration: 900ms;
+    --motion-delay: 40ms;
+  }
+
+  .motion-lock-title {
+    --motion-x: 30px;
+    --motion-y: 0;
+    --motion-clip: 0 12% 0 0;
+    --motion-duration: 780ms;
+    --motion-delay: 190ms;
+  }
+
+  .motion-lock-tagline {
+    --motion-x: -20px;
+    --motion-y: 0;
+    --motion-clip: 0 0 0 12%;
+    --motion-duration: 680ms;
+    --motion-delay: 330ms;
+  }
+
+  .motion-lock-form {
+    --motion-y: 28px;
+    --motion-clip: 0 0 18% 0;
+    --motion-duration: 760ms;
+    --motion-delay: 470ms;
+  }
+
+  .motion-lock-notice {
+    --motion-y: 14px;
+    --motion-duration: 640ms;
+    --motion-delay: 650ms;
+  }
+
+  .motion-header-title {
+    --motion-x: -18px;
+    --motion-y: 0;
+    --motion-duration: 560ms;
+  }
+
+  .motion-header-actions {
+    --motion-x: 18px;
+    --motion-y: 0;
+    --motion-duration: 640ms;
+    --motion-delay: 100ms;
+  }
+
+  .motion-footer-copy {
+    --motion-y: 12px;
+    --motion-duration: 560ms;
+    --motion-delay: 320ms;
+  }
+
+  .motion-stagger > * {
+    animation: ksp-component-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .motion-stagger > :nth-child(2) {
+    animation-delay: 70ms;
+  }
+
+  .motion-stagger > :nth-child(3) {
+    animation-delay: 140ms;
+  }
+
+  .motion-stagger > :nth-child(4) {
+    animation-delay: 210ms;
+  }
+
+  .motion-stagger > :nth-child(n + 5) {
+    animation-delay: 280ms;
+  }
+
+  .motion-metric-item {
+    --motion-y: 18px;
+    --motion-duration: 620ms;
+  }
+
+  .motion-metric-item:nth-child(2) { --motion-delay: 90ms; }
+  .motion-metric-item:nth-child(3) { --motion-delay: 180ms; }
+  .motion-metric-item:nth-child(4) { --motion-delay: 270ms; }
+
+  .motion-chart-heading {
+    --motion-x: -18px;
+    --motion-y: 0;
+    --motion-duration: 580ms;
+    --motion-delay: 100ms;
+  }
+
+  .motion-chart-asset {
+    --motion-y: 22px;
+    --motion-clip: 0 0 16% 0;
+    --motion-duration: 760ms;
+    --motion-delay: 190ms;
+  }
+
+  .motion-chart-summary {
+    --motion-x: 16px;
+    --motion-y: 0;
+    --motion-duration: 620ms;
+    --motion-delay: 300ms;
+  }
+
+  .motion-chart-details {
+    --motion-y: 12px;
+    --motion-duration: 540ms;
+    --motion-delay: 390ms;
+  }
+
+  .motion-table-toolbar {
+    --motion-x: -18px;
+    --motion-y: 0;
+    --motion-duration: 620ms;
+    --motion-delay: 120ms;
+  }
+
+  .motion-table-note {
+    --motion-y: 12px;
+    --motion-duration: 540ms;
+    --motion-delay: 200ms;
+  }
+
+  .motion-table-content,
+  .motion-table-empty {
+    --motion-y: 22px;
+    --motion-clip: 0 0 12% 0;
+    --motion-duration: 760ms;
+    --motion-delay: 260ms;
+  }
+
+  .motion-table-pagination {
+    --motion-x: 18px;
+    --motion-y: 0;
+    --motion-duration: 600ms;
+    --motion-delay: 390ms;
+  }
+
+  .motion-dialog[open] {
+    animation: ksp-dialog-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .motion-dialog[open]::backdrop {
+    animation: ksp-backdrop-enter 280ms ease-out both;
+  }
+
+  .motion-dialog[open] .motion-dialog-header,
+  .motion-dialog[open] .motion-dialog-body > * {
+    animation: ksp-dialog-content-reveal var(--motion-duration, 620ms)
+      cubic-bezier(0.16, 1, 0.3, 1) var(--motion-delay, 0ms) both;
+  }
+
+  .motion-dialog[open] .motion-dialog-header {
+    --motion-y: -18px;
+    --motion-duration: 560ms;
+    --motion-delay: 80ms;
+  }
+
+  .motion-dialog[open] .motion-dialog-body > * {
+    --motion-y: 20px;
+    --motion-duration: 680ms;
+    --motion-delay: 170ms;
+  }
+
+  .motion-dialog[open] .motion-dialog-body > :nth-child(2) { --motion-delay: 250ms; }
+  .motion-dialog[open] .motion-dialog-body > :nth-child(3) { --motion-delay: 330ms; }
+  .motion-dialog[open] .motion-dialog-body > :nth-child(4) { --motion-delay: 410ms; }
+  .motion-dialog[open] .motion-dialog-body > :nth-child(n + 5) { --motion-delay: 490ms; }
+
+  button {
+    transition-property: color, background-color, border-color, opacity, transform;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+  }
+
+  button:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

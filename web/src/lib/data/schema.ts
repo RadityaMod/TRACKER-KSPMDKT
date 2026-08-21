@@ -29,6 +29,7 @@ export interface Report {
   /** PII — sebagian baris memuat NIK di dalam teks ini. */
   ringkasan: string;
   lampiran: string;
+  tautanData: string;
   status: string;
   tanggalUpdate: DateOnly | null;
   catatan: string;
@@ -57,6 +58,13 @@ const COLUMNS = {
   kategori: ["Kategori Aduan"],
   ringkasan: ["Ringkasan Aspirasi"],
   lampiran: ["Lampiran"],
+  tautanData: [
+    "Tauatan Link Data",
+    "Tauatan Link data",
+    "Tautan Link Data",
+    "Tautan Link data",
+    "Tautan Data",
+  ],
   status: ["Status Tindak Lanjut"],
   tanggalUpdate: ["Tanggal Update Terakhir"],
   catatan: ["Catatan"],
@@ -172,6 +180,7 @@ export function parseReports(rows: Row[]): ParseResult {
       kategori: at(row, COLUMNS.kategori),
       ringkasan: at(row, COLUMNS.ringkasan),
       lampiran: at(row, COLUMNS.lampiran),
+      tautanData: at(row, COLUMNS.tautanData),
       status: at(row, COLUMNS.status),
       tanggalUpdate: parseDateId(at(row, COLUMNS.tanggalUpdate)),
       catatan,

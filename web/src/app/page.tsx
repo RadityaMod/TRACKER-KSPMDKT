@@ -1,4 +1,3 @@
-import { Lock } from "lucide-react";
 import { Suspense } from "react";
 import { getReports, SchemaError } from "@/lib/data/reports";
 import { computeInsights, computeMetrics } from "@/lib/data/metrics";
@@ -7,6 +6,7 @@ import { MetricsRow } from "@/components/metrics-row";
 import { TrafficChart } from "@/components/traffic-chart";
 import { ReportsTable } from "@/components/reports-table";
 import { RefreshButton } from "@/components/refresh-button";
+import { SessionActivity } from "@/components/session-activity";
 
 /**
  * Ambil ulang data paling sering tiap 5 menit.
@@ -129,38 +129,25 @@ function TableSkeleton() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <>
+      <SessionActivity />
       <header className="text-ink">
-        <div className="mx-auto flex min-h-13 w-full max-w-[1440px] items-center justify-between gap-3 px-3 sm:px-6">
-          <strong className="block truncate text-sm font-black tracking-[-0.02em] text-regal-blue sm:text-[15px]">
+        <div className="mx-auto grid min-h-14 w-full max-w-[1440px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 sm:px-6">
+          <span aria-hidden="true" />
+          <strong className="motion-header-title block text-center text-base font-black tracking-[-0.02em] whitespace-nowrap text-regal-blue sm:text-xl">
             KSP MENDEKAT TRACKER
           </strong>
 
-          {/*
-            Satu kelompok bergaris, bukan dua tombol lepas. Keduanya aksi
-            utilitas: tak satu pun pantas berbobot seperti tombol primer,
-            karena isi utama halaman ini adalah tabelnya.
-          */}
-          <div className="flex shrink-0 items-center divide-x divide-line overflow-hidden rounded-lg border border-line bg-surface">
+          <div className="motion-header-actions flex justify-self-end">
             <RefreshButton />
-            <form action="/api/pin/logout" method="post" className="flex">
-              <button
-                type="submit"
-                className="inline-flex min-h-11 items-center gap-2 px-3 text-xs font-bold text-ink-muted transition hover:bg-surface-sunken hover:text-regal-blue sm:px-4"
-                aria-label="Kunci dashboard di perangkat ini"
-              >
-                <Lock aria-hidden="true" className="size-4 shrink-0" />
-                Kunci
-              </button>
-            </form>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 p-3 sm:p-6">
+      <main className="motion-stagger mx-auto flex w-full max-w-[1440px] flex-col gap-3 p-3 sm:p-6">
         {children}
       </main>
 
-      <footer className="mx-auto w-full max-w-[1440px] px-3 pb-6 text-[11px] text-ink-muted sm:px-6">
+      <footer className="motion-footer-copy mx-auto w-full max-w-[1440px] px-3 pb-6 text-[11px] text-ink-muted sm:px-6">
         File ini memuat kontak lengkap pelapor. Simpan hanya di perangkat yang
         berizin.
       </footer>

@@ -59,7 +59,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
 
   return (
     <div>
-      <div className="mb-1 flex flex-wrap items-end justify-between gap-2 px-4 pt-4">
+      <div className="motion-chart-heading mb-1 flex flex-wrap items-end justify-between gap-2 px-4 pt-4">
         <div>
           <span className="block text-[11px] font-bold tracking-wider text-ink-muted uppercase">
             Traffic harian
@@ -77,7 +77,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
         config={chartConfig}
         // aspect-video dari shadcn dilepas: 70 titik harian butuh lebar penuh
         // dengan tinggi tetap, bukan rasio 16:9 yang jadi sangat tinggi.
-        className="aspect-auto h-[190px] w-full"
+        className="motion-chart-asset aspect-auto h-[190px] w-full"
       >
         <LineChart
           accessibilityLayer
@@ -127,7 +127,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
         </LineChart>
       </ChartContainer>
 
-      <div className="flex flex-col items-start gap-1 px-4 pt-2 pb-4 text-sm">
+      <div className="motion-chart-summary flex flex-col items-start gap-1 px-4 pt-2 pb-4 text-sm">
         <div className="flex items-center gap-2 leading-none font-medium text-regal-blue">
           Puncak {peak?.count ?? 0} laporan pada{" "}
           {peak ? formatLong(peak.date) : "—"}
@@ -138,7 +138,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
         </div>
       </div>
 
-      <details className="px-4 pb-4">
+      <details className="motion-chart-details px-4 pb-4">
         <summary className="inline-flex min-h-11 cursor-pointer items-center text-xs text-ink-muted">
           Lihat data grafik sebagai tabel
         </summary>

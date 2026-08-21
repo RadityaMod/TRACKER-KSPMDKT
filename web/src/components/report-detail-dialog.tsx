@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { ExternalLink } from "lucide-react";
 import { formatLong } from "@/lib/data/date";
 import type { Report } from "@/lib/data/schema";
 import { ChannelBadge } from "./channel-badge";
@@ -13,6 +14,36 @@ interface Field {
   prose?: boolean;
   /** Ganti teks polos dengan elemen sendiri, mis. badge kanal. */
   render?: React.ReactNode;
+}
+
+function safeExternalUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function DataLink({ value }: { value: string }) {
+  const href = safeExternalUrl(value);
+  if (!href) return <>{value || "—"}</>;
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-endless-sky underline decoration-endless-sky/35 underline-offset-4 hover:decoration-endless-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-endless-sky"
+      aria-label="Buka tautan data laporan di tab baru"
+    >
+      Buka tautan data
+      <ExternalLink aria-hidden="true" className="size-4 shrink-0" />
+    </a>
+  );
 }
 
 function FieldList({ fields }: { fields: Field[] }) {
@@ -66,7 +97,7 @@ export function ReportDetailDialog({
     <dialog
       ref={ref}
       aria-labelledby="detail-title"
-      className="m-auto w-[min(760px,calc(100%-2rem))] rounded-2xl p-0 backdrop:bg-regal-blue/40 backdrop:backdrop-blur-sm"
+      className="motion-dialog m-auto w-[min(760px,calc(100%-2rem))] rounded-2xl p-0 backdrop:bg-regal-blue/40 backdrop:backdrop-blur-sm"
       onClick={(event) => {
         // Klik pada backdrop (bukan isi) menutup dialog.
         if (event.target === ref.current) ref.current?.close();
@@ -74,7 +105,7 @@ export function ReportDetailDialog({
     >
       {report && (
         <div className="flex max-h-[85vh] flex-col">
-          <header className="flex items-start justify-between gap-4 bg-endless-sky px-6 py-4 text-white">
+          <header className="motion-dialog-header flex items-start justify-between gap-4 bg-endless-sky px-6 py-4 text-white">
             <div className="min-w-0">
               <p className="text-[11px] text-royal-light-blue">
                 Entri No. {report.no} · masuk{" "}
@@ -94,7 +125,7 @@ export function ReportDetailDialog({
           </header>
 
           <div
-            className="overflow-auto px-6 pb-6"
+            className="motion-dialog-body overflow-auto px-6 pb-6"
             tabIndex={0}
             aria-label="Detail laporan yang dapat digulir"
           >
@@ -141,6 +172,12 @@ export function ReportDetailDialog({
                   { label: "Kategori aduan", value: report.kategori, wide: true },
                   { label: "Ringkasan aspirasi", value: report.ringkasan, wide: true, prose: true },
                   { label: "Lampiran", value: report.lampiran, wide: true },
+                  {
+                    label: "Tautan data",
+                    value: report.tautanData,
+                    wide: true,
+                    render: <DataLink value={report.tautanData} />,
+                  },
                 ]}
               />
             </section>

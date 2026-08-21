@@ -6,6 +6,7 @@
 import type { Report } from "./schema";
 
 export type SortKey =
+  | "no"
   | "status"
   | "kanal"
   | "kategori"
@@ -22,16 +23,15 @@ export interface Query {
 }
 
 /**
- * Urutan awal: tanggal masuk, yang terbaru di atas.
+ * Urutan awal: entri terakhir yang ditambahkan berada paling atas.
  *
- * Sebelumnya sortKey null, yang berarti "pakai urutan baris sheet" — urutan
- * itu menaik menurut nomor entri, sehingga laporan terlama justru muncul
- * paling atas dan yang baru masuk terkubur di dasar.
+ * Nomor entri mengikuti penambahan baris di Sheet. Ini sengaja tidak memakai
+ * Tanggal Masuk karena laporan yang baru dicatat dapat memiliki tanggal lama.
  */
 export const EMPTY_QUERY: Query = {
   search: "",
   status: "",
-  sortKey: "masuk",
+  sortKey: "no",
   sortDirection: "desc",
 };
 
@@ -89,6 +89,8 @@ function haystack(report: Report): string {
  */
 function sortValue(report: Report, key: Exclude<SortKey, null>): string {
   switch (key) {
+    case "no":
+      return String(report.no);
     case "masuk":
       return report.tanggalMasuk ?? "";
     case "update":

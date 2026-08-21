@@ -142,9 +142,11 @@ Request
 ```
 
 Form PIN mengirim POST ke `/api/pin/unlock`. PIN benar menerbitkan cookie
-`HttpOnly`, `SameSite=Lax`, `Secure` di production selama tujuh hari. PIN salah
-dicatat per alamat IP; lima kegagalan dalam 15 menit memicu lockout sementara.
-Keberhasilan unlock mereset hitungan. Logout menghapus cookie.
+`HttpOnly`, `SameSite=Lax`, `Secure` di production dengan idle timeout 24 jam.
+Aktivitas dashboard memperbarui masa cookie melalui heartbeat terautentikasi;
+tanpa aktivitas, layar kembali terkunci. PIN salah dicatat per alamat IP; lima
+kegagalan dalam 15 menit memicu lockout sementara. Keberhasilan unlock mereset
+hitungan. Endpoint logout menghapus cookie.
 
 Rate limiter in-memory adalah mitigasi best-effort per instance, bukan limit
 global lintas region/serverless instance. Vercel Firewall/WAF tetap menjadi
@@ -345,8 +347,8 @@ supaya bisa diuji tanpa render.
 - URL Vercel tetap dapat dijangkau dari internet. Gunakan PIN kuat,
   `DASHBOARD_PIN_SECRET` acak yang berbeda dari PIN, Deployment Protection
   selama rollout, serta Vercel Firewall/WAF bila diperlukan.
-- Signed cookie memakai `HttpOnly`, `SameSite=Lax`, `Secure` di production, dan
-  masa berlaku tujuh hari.
+- Signed cookie memakai `HttpOnly`, `SameSite=Lax`, `Secure` di production,
+  dengan idle timeout 24 jam yang diperbarui saat dashboard aktif.
 - Lima PIN salah dalam 15 menit dikunci best-effort per IP/per instance.
 - Fallback CSV production mati secara default; snapshot PII tidak boleh ikut
   bundle atau Git.

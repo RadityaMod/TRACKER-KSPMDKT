@@ -1,5 +1,5 @@
 export const PIN_COOKIE_NAME = "ksp_dashboard_pin";
-export const PIN_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+export const PIN_COOKIE_MAX_AGE = 60 * 60 * 24;
 
 const encoder = new TextEncoder();
 

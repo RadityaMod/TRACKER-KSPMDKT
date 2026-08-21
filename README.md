@@ -14,8 +14,8 @@ Kontrol akses yang berlaku:
 
 - Dashboard dan endpoint privat dilindungi satu **shared PIN internal**.
 - `src/proxy.ts` memverifikasi signed session cookie sebelum request diteruskan.
-- Cookie bersifat `HttpOnly`, `SameSite=Lax`, `Secure` di production, dan berlaku
-  tujuh hari.
+- Cookie bersifat `HttpOnly`, `SameSite=Lax`, `Secure` di production, dan
+  terkunci setelah 24 jam tanpa aktivitas dashboard.
 - Lima kegagalan PIN dalam 15 menit dikunci sementara per alamat IP. Pembatas
   ini best-effort per instance; gunakan Vercel Firewall/WAF sebagai lapisan
   global bila endpoint menerima traffic yang tidak dipercaya.

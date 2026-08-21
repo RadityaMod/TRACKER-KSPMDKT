@@ -67,7 +67,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
       search: params.get("q") ?? "",
       status: params.get("status") ?? "",
       // URL menang bila memuat sortir; kalau tidak, pakai default
-      // (pembaruan terbaru dulu), bukan urutan mentah sheet.
+      // (entri terakhir ditambahkan dulu), bukan urutan mentah sheet.
       sortKey: sort ?? EMPTY_QUERY.sortKey,
       sortDirection: sort ? dir : EMPTY_QUERY.sortDirection,
     };
@@ -126,7 +126,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
       aria-label="Daftar pelapor"
       className="overflow-hidden rounded-xl border border-line bg-surface shadow-card"
     >
-      <div className="grid gap-2 border-b border-line p-3 sm:grid-cols-[minmax(0,1fr)_200px_auto]">
+      <div className="motion-table-toolbar grid gap-2 border-b border-line p-3 sm:grid-cols-[minmax(0,1fr)_200px_auto]">
         <div>
           <label htmlFor="search" className="sr-only">
             Cari pelapor atau aspirasi
@@ -177,7 +177,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
       </div>
 
       {statuses.length < 2 && (
-        <p className="border-b border-line bg-sky-50 px-3 py-2 text-xs text-endless-sky">
+        <p className="motion-table-note border-b border-line bg-sky-50 px-3 py-2 text-xs text-endless-sky">
           Seluruh {reports.length} entri berstatus{" "}
           <strong>{statuses[0] ?? "kosong"}</strong>, jadi filter status belum ada
           gunanya. Tile Proses dan Selesai akan tetap nol sampai status di sumber
@@ -185,7 +185,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
         </p>
       )}
 
-      <div ref={tableRef} className="scroll-mt-3 overflow-x-auto">
+      <div ref={tableRef} className="motion-table-content scroll-mt-3 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <caption className="sr-only">
             Daftar pelapor KSP Mendekat, halaman {pagination.page} dari{" "}
@@ -342,7 +342,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
       </div>
 
       {filtered.length === 0 && (
-        <div className="px-4 py-12 text-center">
+        <div className="motion-table-empty px-4 py-12 text-center">
           <strong className="block">Belum ada entri yang cocok</strong>
           <span className="mx-auto mt-1 block max-w-md text-xs text-ink-muted">
             Ubah kata pencarian atau hapus filter status untuk menampilkan kembali data.
@@ -353,7 +353,7 @@ export function ReportsTable({ reports }: { reports: Report[] }) {
       {filtered.length > 0 && (
         <nav
           aria-label="Navigasi halaman daftar pelapor"
-          className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-3 py-2"
+          className="motion-table-pagination flex flex-wrap items-center justify-between gap-2 border-t border-line px-3 py-2"
         >
           <span className="text-xs tabular-nums text-ink-muted">
             {pagination.first}–{pagination.last} dari {filtered.length}

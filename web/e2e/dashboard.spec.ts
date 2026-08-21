@@ -39,15 +39,16 @@ test("wrong PIN shows a useful error", async ({ page }) => {
   await expect(page.getByText("PIN belum cocok. Coba masukkan ulang.")).toBeVisible();
 });
 
-test("valid PIN opens the dashboard and logout locks it again", async ({ page }) => {
+test("valid PIN opens the dashboard without a manual lock button", async ({ page }) => {
   await unlock(page);
   // Header tak lagi menampilkan label sumber data, jadi bukti bahwa CSV
   // fallback benar-benar termuat diambil dari caption tabel.
   await expect(
-    page.getByRole("table", { name: "Daftar pelapor KSP Mendekat, 2 dari 2 entri" }),
+    page.getByRole("table", { name: /Daftar pelapor KSP Mendekat.*2 dari 2 hasil/ }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Kunci dashboard di perangkat ini" }).click();
-  await expectPath(page, "/pin");
+  await expect(
+    page.getByRole("button", { name: "Kunci dashboard di perangkat ini" }),
+  ).toHaveCount(0);
 });
 
 test("PIN, dashboard, and detail dialog pass axe checks", async ({ page }) => {
@@ -60,12 +61,18 @@ test("PIN, dashboard, and detail dialog pass axe checks", async ({ page }) => {
   await expectNoAxeViolations(page);
 
   await page.getByRole("button", { name: /Detail Siti Rahma/ }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  const dataLink = dialog.getByRole("link", { name: "Buka tautan data laporan di tab baru" });
+  await expect(dataLink).toHaveAttribute("href", "https://contoh.go.id/data/1");
+  await expect(dataLink).toHaveAttribute("target", "_blank");
   await expectNoAxeViolations(page);
 });
 
 test("mobile interactive targets are at least 44 pixels", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/pin");
+  await expect(page.getByRole("button", { name: "Buka dashboard" })).toBeVisible();
   await unlock(page);
 
   const undersized = await page

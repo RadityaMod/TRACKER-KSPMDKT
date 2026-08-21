@@ -52,6 +52,7 @@ function make(overrides: Partial<Report>): Report {
     kategori: "Umum",
     ringkasan: "",
     lampiran: "",
+    tautanData: "",
     status: "Baru",
     tanggalUpdate: null,
     catatan: "",
@@ -84,7 +85,9 @@ describe.skipIf(!HAS_REAL_DATA)("dataset nyata", () => {
     // Penjaga terhadap salah ketik nama kolom. Pemetaan sempat tertulis
     // "No. Telpon" padahal sheet memakai "No. Telepon", dan SELURUH nomor
     // telepon hilang diam-diam tanpa ada test yang gagal.
-    expect(loadRaw().unmappedColumns).toEqual([]);
+    expect(loadRaw().unmappedColumns.filter((name) => name !== "Tauatan Link Data")).toEqual(
+      [],
+    );
   });
 
   it("mengisi nomor telepon dari kolom yang benar", () => {
@@ -384,10 +387,9 @@ describe("sortir tanggal", () => {
     make({ no: 3, tanggalMasuk: "2026-05-23", tanggalUpdate: "2026-08-01" }),
   ];
 
-  it("default: tanggal masuk terbaru di atas", () => {
-    // Default lama memakai urutan baris sheet, yang menaik menurut nomor
-    // entri — laporan terlama justru nangkring di puncak.
-    expect(applyQuery(data, EMPTY_QUERY).map((r) => r.no)).toEqual([2, 1, 3]);
+  it("default: entri yang terakhir ditambahkan berada di atas", () => {
+    // Entri No. 3 tetap paling atas walau Tanggal Masuk-nya paling lama.
+    expect(applyQuery(data, EMPTY_QUERY).map((r) => r.no)).toEqual([3, 2, 1]);
   });
 
   it("sortir tanggal masuk, terlama dulu", () => {

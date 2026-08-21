@@ -23,7 +23,7 @@ function Tile({
   accent?: string;
 }) {
   return (
-    <div className="min-w-0 border-line px-4 py-3 not-first:border-l">
+    <div className="motion-metric-item min-w-0 border-line px-4 py-3 not-first:border-l">
       <dt className="text-[11px] font-bold tracking-wide text-ink-muted uppercase">
         {label}
       </dt>

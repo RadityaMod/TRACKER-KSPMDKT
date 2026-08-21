@@ -7,7 +7,7 @@ import { parseReports, SchemaError } from "@/lib/data/schema";
 const HEADER =
   "No;Tanggal Masuk;Kanal;Nama Pelapor;Kontak WA / ID Chat;No. Telepon;Alamat;" +
   "Status Pelapor;Kategori Aduan;Ringkasan Aspirasi;Lampiran;" +
-  "Status Tindak Lanjut;Tanggal Update Terakhir;Catatan";
+  "Status Tindak Lanjut;Tanggal Update Terakhir;Catatan;Tauatan Link Data";
 
 function csv(...rows: string[]) {
   return parseCsv([HEADER, ...rows].join("\n"));
@@ -44,7 +44,8 @@ describe("parseReports", () => {
     const { reports } = parseReports(
       csv(
         "1;23/05/2026;WhatsApp;Budi;wa-id;628123;Jakarta;Kontak Baru;" +
-          "Pendidikan;Ringkasan di sini;Tersedia;Baru;09/07/2026;Catatan bebas",
+          "Pendidikan;Ringkasan di sini;Tersedia;Baru;09/07/2026;Catatan bebas;" +
+          "https://contoh.go.id/data/1",
       ),
     );
 
@@ -58,6 +59,7 @@ describe("parseReports", () => {
       kategori: "Pendidikan",
       status: "Baru",
       tanggalUpdate: "2026-07-09",
+      tautanData: "https://contoh.go.id/data/1",
       perluVerifikasi: false,
     });
   });
@@ -118,6 +120,18 @@ describe("parseReports", () => {
       const { reports, unmappedColumns } = parseReports(rows);
       expect(reports[0].noTelpon, spelling).toBe("628123456789");
       expect(unmappedColumns, spelling).not.toContain("No. Telpon");
+    }
+  });
+
+  it("menerima ejaan kolom tautan yang dipakai sheet dan versi yang dibetulkan", () => {
+    for (const spelling of ["Tauatan Link Data", "Tautan Link Data", "Tautan Data"]) {
+      const rows = parseCsv(
+        `No;Tanggal Masuk;Nama Pelapor;Kategori Aduan;Status Tindak Lanjut;${spelling}\n` +
+          "1;23/05/2026;Budi;Hukum;Baru;https://contoh.go.id/data/1",
+      );
+      const { reports, unmappedColumns } = parseReports(rows);
+      expect(reports[0].tautanData, spelling).toBe("https://contoh.go.id/data/1");
+      expect(unmappedColumns, spelling).not.toContain("Tauatan Link Data");
     }
   });
 

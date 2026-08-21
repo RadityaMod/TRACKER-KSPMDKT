@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { PIN_COOKIE_NAME, verifyPinSession } from "@/lib/auth/pin";
+import {
+  PIN_COOKIE_MAX_AGE,
+  PIN_COOKIE_NAME,
+  verifyPinSession,
+} from "@/lib/auth/pin";
 
 const PUBLIC_PREFIXES = ["/pin", "/api/pin"];
 const PUBLIC_FILES = ["/favicon.ico", "/robots.txt", "/sitemap.xml"];
@@ -25,7 +29,15 @@ export async function proxy(request: NextRequest) {
 
   const token = request.cookies.get(PIN_COOKIE_NAME)?.value;
   if (await verifyPinSession(token)) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.cookies.set(PIN_COOKIE_NAME, token!, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: PIN_COOKIE_MAX_AGE,
+    });
+    return response;
   }
 
   return NextResponse.redirect(loginUrl(request));

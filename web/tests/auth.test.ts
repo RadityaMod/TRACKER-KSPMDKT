@@ -9,6 +9,7 @@ import {
 import { pinAttemptLimiter } from "../src/lib/auth/rate-limit";
 import { POST as unlock } from "../src/app/api/pin/unlock/route";
 import { POST as logout } from "../src/app/api/pin/logout/route";
+import { POST as activity } from "../src/app/api/pin/activity/route";
 
 const TEST_PIN = "24681012";
 const TEST_SECRET = "test-secret-separate-from-pin";
@@ -86,6 +87,7 @@ describe("dashboard proxy", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(response.headers.get("set-cookie")).toContain("Max-Age=86400");
   });
 });
 
@@ -125,6 +127,27 @@ describe("PIN API", () => {
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=lax");
     expect(cookie).toContain("Path=/");
+    expect(cookie).toContain("Max-Age=86400");
+  });
+
+  it("refreshes an active session for another 24 hours", async () => {
+    const token = await createPinSessionToken();
+    const response = await activity(
+      new NextRequest("http://localhost/api/pin/activity", {
+        method: "POST",
+        headers: { cookie: `${PIN_COOKIE_NAME}=${token}` },
+      }),
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("set-cookie")).toContain("Max-Age=86400");
+  });
+
+  it("rejects activity heartbeats without a valid session", async () => {
+    const response = await activity(
+      new NextRequest("http://localhost/api/pin/activity", { method: "POST" }),
+    );
+    expect(response.status).toBe(401);
   });
 
   it("rate-limits the fifth failed attempt for the same client", async () => {
