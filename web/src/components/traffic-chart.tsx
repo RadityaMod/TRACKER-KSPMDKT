@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { TrendingUp } from "lucide-react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
@@ -10,7 +11,13 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { formatLong, formatShort } from "@/lib/data/date";
-import type { Traffic } from "@/lib/data/traffic";
+import {
+  limitTrafficToLatestMonth,
+  limitTrafficWindow,
+  type Traffic,
+} from "@/lib/data/traffic";
+
+type Range = "week" | "month" | "all";
 
 const chartConfig = {
   laporan: {
@@ -38,6 +45,8 @@ export function tickIndices(total: number, desired: number): number[] {
 }
 
 export function TrafficChart({ traffic }: { traffic: Traffic }) {
+  const [range, setRange] = useState<Range>("all");
+
   if (traffic.points.length === 0) {
     return (
       <p className="grid h-24 place-items-center px-4 text-sm text-ink-muted">
@@ -46,7 +55,13 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
     );
   }
 
-  const { points, peak } = traffic;
+  const view =
+    range === "month"
+      ? limitTrafficToLatestMonth(traffic)
+      : limitTrafficWindow(traffic, range === "week" ? 7 : null);
+  const { points, peak } = view;
+  const firstDate = points[0].date;
+  const lastDate = points.at(-1)!.date;
 
   const chartData = points.map((point) => ({
     date: point.date,
@@ -59,30 +74,57 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
 
   return (
     <div>
-      <div className="motion-chart-heading mb-1 flex flex-wrap items-end justify-between gap-2 px-4 pt-4">
+      <div className="motion-chart-heading mb-1 flex flex-wrap items-end justify-between gap-3 px-4 pt-4">
         <div>
           <span className="block text-[11px] font-bold tracking-wider text-ink-muted uppercase">
-            Traffic harian
+            Traffic {range === "week" ? "1 minggu" : range === "month" ? "1 bulan" : "keseluruhan"}
           </span>
           <strong className="block text-base text-regal-blue">
-            Laporan masuk per hari
+            {range === "all"
+              ? "Laporan sepanjang waktu"
+              : range === "week"
+                ? "Laporan 7 hari terakhir"
+                : "Laporan satu bulan penuh"}
           </strong>
         </div>
-        <span className="text-xs text-ink-muted">
-          {formatLong(points[0].date)} – {formatLong(points.at(-1)!.date)}
-        </span>
+        <div className="flex flex-wrap items-center justify-end gap-x-4">
+          <span className="text-xs text-ink-muted">
+            {formatLong(firstDate)} – {formatLong(lastDate)}
+          </span>
+          <div
+            role="group"
+            aria-label="Periode grafik"
+            className="flex items-center border-b border-line"
+          >
+            {(["week", "month", "all"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={range === value}
+                onClick={() => setRange(value)}
+                className={`-mb-px min-h-11 border-b-2 px-3 text-xs font-bold transition-colors ${
+                  range === value
+                    ? "border-endless-sky text-regal-blue"
+                    : "border-transparent text-ink-muted hover:text-regal-blue"
+                }`}
+              >
+                {value === "week" ? "1 Minggu" : value === "month" ? "1 Bulan" : "Semua"}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <ChartContainer
         config={chartConfig}
         // aspect-video dari shadcn dilepas: 70 titik harian butuh lebar penuh
         // dengan tinggi tetap, bukan rasio 16:9 yang jadi sangat tinggi.
-        className="motion-chart-asset aspect-auto h-[190px] w-full"
+        className="motion-chart-asset aspect-auto h-[204px] w-full"
       >
         <LineChart
           accessibilityLayer
           data={chartData}
-          margin={{ top: 16, left: 12, right: 12, bottom: 4 }}
+          margin={{ top: 16, left: 12, right: 12, bottom: 8 }}
         >
           <CartesianGrid vertical={false} />
           <XAxis
@@ -90,7 +132,8 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
             ticks={ticks}
             tickLine={false}
             axisLine={false}
-            tickMargin={8}
+            height={36}
+            tickMargin={12}
             // Di layar sempit ketujuh label saling menempel. minTickGap
             // membuang label yang jaraknya < 56px, tapi tetap mempertahankan
             // tanggal pertama dan terakhir.
@@ -103,6 +146,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
             tickLine={false}
             axisLine={false}
             allowDecimals={false}
+            domain={[0, "auto"]}
             tickMargin={4}
           />
           <ChartTooltip
@@ -116,7 +160,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
           />
           <Line
             dataKey="laporan"
-            type="natural"
+            type="monotone"
             stroke="var(--color-laporan)"
             strokeWidth={2}
             // 70 titik: dot statis di tiap hari jadi terlalu ramai, jadi hanya
@@ -134,7 +178,7 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
           <TrendingUp className="h-4 w-4" />
         </div>
         <div className="leading-none text-ink-muted">
-          Total {traffic.total} laporan sepanjang {points.length} hari
+          Total {view.total} laporan sepanjang {points.length} hari
         </div>
       </div>
 
@@ -144,7 +188,9 @@ export function TrafficChart({ traffic }: { traffic: Traffic }) {
         </summary>
         <div className="mt-2 max-h-56 overflow-auto rounded-lg border border-line">
           <table className="w-full text-xs">
-            <caption className="sr-only">Jumlah laporan masuk per hari</caption>
+            <caption className="sr-only">
+              Jumlah laporan masuk per hari
+            </caption>
             <thead className="sticky top-0 bg-surface-sunken text-ink-muted">
               <tr>
                 <th scope="col" className="px-3 py-1.5 text-left font-semibold">

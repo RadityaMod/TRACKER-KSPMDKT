@@ -4,7 +4,11 @@ import path from "node:path";
 import { parseCsv } from "@/lib/data/csv";
 import { parseReports } from "@/lib/data/schema";
 import { computeInsights, computeMetrics, isNew, isResolved } from "@/lib/data/metrics";
-import { computeTraffic } from "@/lib/data/traffic";
+import {
+  computeTraffic,
+  limitTrafficToLatestMonth,
+  limitTrafficWindow,
+} from "@/lib/data/traffic";
 import {
   applyQuery,
   EMPTY_QUERY,
@@ -189,6 +193,36 @@ describe("computeTraffic", () => {
 
   it("menangani dataset kosong tanpa crash", () => {
     expect(computeTraffic([])).toEqual({ points: [], peak: null, total: 0 });
+  });
+});
+
+describe("limitTrafficWindow", () => {
+  const traffic = computeTraffic([
+    make({ no: 1, tanggalMasuk: "2026-05-01" }),
+    make({ no: 2, tanggalMasuk: "2026-05-05" }),
+    make({ no: 3, tanggalMasuk: "2026-05-10" }),
+  ]);
+
+  it("mengambil tujuh hari terakhir dari tanggal data terbaru", () => {
+    const limited = limitTrafficWindow(traffic, 7);
+    expect(limited.points[0].date).toBe("2026-05-04");
+    expect(limited.points.at(-1)!.date).toBe("2026-05-10");
+    expect(limited.total).toBe(2);
+    expect(limited.peak).toEqual({ date: "2026-05-05", count: 1 });
+  });
+
+  it("mengembalikan seluruh traffic untuk pilihan Semua", () => {
+    expect(limitTrafficWindow(traffic, null)).toBe(traffic);
+  });
+
+  it("menampilkan bulan kalender terbaru dari awal sampai akhir", () => {
+    const month = limitTrafficToLatestMonth(traffic);
+    expect(month.points[0].date).toBe("2026-05-01");
+    expect(month.points.at(-1)!.date).toBe("2026-05-31");
+    expect(month.points).toHaveLength(31);
+    expect(month.points.at(-1)!.count).toBe(0);
+    expect(month.total).toBe(3);
+    expect(month.peak).toEqual({ date: "2026-05-01", count: 1 });
   });
 });
 
